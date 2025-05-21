@@ -288,6 +288,37 @@
   accent-color: #0078d4;
 }
 
+.area-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.area-chip {
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: #f4f4f4;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.area-chip.selected {
+  background-color: #0078d4;
+  color: white;
+  border-color: #0078d4;
+}
+
+.area-chip i {
+  font-size: 14px;
+}
+
 
   </style>
 </head>
@@ -308,35 +339,21 @@
       </div>
 
 
-<div class="filter-container">
-  <label>
-    <input type="checkbox" ng-checked="selectedAreas.length === 0" ng-click="toggleAllAreas()"> Todas as Áreas
-  </label>
-  <label>
-    <input type="checkbox" ng-model="selectedAreas['Jurídico']" ng-change="filterByArea()"> Jurídico
-  </label>
-  <label>
-    <input type="checkbox" ng-model="selectedAreas['Contabilidade']" ng-change="filterByArea()"> Contabilidade
-  </label>
-  <label>
-    <input type="checkbox" ng-model="selectedAreas['Investimentos']" ng-change="filterByArea()"> Investimentos
-  </label>
-  <label>
-    <input type="checkbox" ng-model="selectedAreas['Soluções Financeiras']" ng-change="filterByArea()"> Soluções Financeiras
-  </label>
-  <label>
-    <input type="checkbox" ng-model="selectedAreas['Auditoria']" ng-change="filterByArea()"> Auditoria
-  </label>
-    <label>
-    <input type="checkbox" ng-model="selectedAreas['Consultoria']" ng-change="filterByArea()"> Consultoria
-  </label>
-  <label>
-    <input type="checkbox" ng-model="selectedAreas['Inteligência de Dados']" ng-change="filterByArea()"> Inteligência de Dados
-  </label>
-  <label>
-    <input type="checkbox" ng-model="selectedAreas['Gestão Tributária']" ng-change="filterByArea()"> Gestão Tributária
-  </label>
+<div class="area-chip-grid">
+  <div class="area-chip"
+       ng-class="{'selected': allSelected}"
+       ng-click="toggleAllAreas()">
+    <i class="fas fa-layer-group"></i> Todas as Áreas
+  </div>
+
+  <div ng-repeat="area in areaList"
+       class="area-chip"
+       ng-class="{'selected': selectedAreas[area.name]}"
+       ng-click="toggleArea(area)">
+    <i class="{{area.icon}}"></i> {{area.name}}
+  </div>
 </div>
+
 
       
       
@@ -2017,6 +2034,41 @@ $scope.exportToExcel = function() {
   XLSX.writeFile(wb, "Produtos_Funcional_Filtrados.xlsx");
 };
 
+$scope.areaList = [
+  { name: 'Jurídico', icon: 'fas fa-gavel' },
+  { name: 'Contabilidade', icon: 'fas fa-calculator' },
+  { name: 'Investimentos', icon: 'fas fa-chart-line' },
+  { name: 'Soluções Financeiras', icon: 'fas fa-university' },
+  { name: 'Auditoria', icon: 'fas fa-search-dollar' },
+  { name: 'Consultoria', icon: 'fas fa-user-tie' },
+  { name: 'Inteligência de Dados', icon: 'fas fa-brain' },
+  { name: 'Gestão Tributária', icon: 'fas fa-file-invoice-dollar' }
+];
+
+$scope.selectedAreas = {};
+$scope.allSelected = true;
+
+// Inicializa com todas selecionadas
+$scope.areaList.forEach(area => {
+  $scope.selectedAreas[area.name] = true;
+});
+
+// Toggle individual
+$scope.toggleArea = function(area) {
+  $scope.selectedAreas[area.name] = !$scope.selectedAreas[area.name];
+  $scope.allSelected = Object.values($scope.selectedAreas).every(v => v);
+  $scope.filterByArea();
+};
+
+// Toggle todas
+$scope.toggleAllAreas = function () {
+  const selectAll = !$scope.allSelected;
+  $scope.allSelected = selectAll;
+  $scope.areaList.forEach(area => {
+    $scope.selectedAreas[area.name] = selectAll;
+  });
+  $scope.filterByArea();
+};
 
 
 });
