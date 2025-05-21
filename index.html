@@ -357,13 +357,14 @@
 
       
       
-<select ng-model="orderList">
+<select ng-model="orderList" ng-change="updateSorting()">
   <option value="name">Ordenar por Nome (A–Z)</option>
   <option value="-code">Ordenar por Mais Recentes</option>
   <option value="code">Ordenar por Mais Antigos</option>
-  <option value="highToLow">Ordenar por Prioridade (Baixa → Alta)</option>
-  <option value="lowToHigh">Ordenar por Prioridade (Alta → Baixa)</option>
+  <option value="highToLow">Ordenar por Prioridade (Alta → Baixa)</option>
+  <option value="lowToHigh">Ordenar por Prioridade (Baixa → Alta)</option>
 </select>
+
 
 
 
@@ -1109,7 +1110,7 @@
         },
 
         {
-          name: " Compliance Trabalhista e Previdenciária",
+          name: "Compliance Trabalhista e Previdenciária",
           description: "Verifica se a empresa está cumprindo corretamente a legislação trabalhista e previdenciária, identificando falhas e inconformidades que possam gerar riscos legais. Ajuda a corrigir práticas inadequadas e prevenir multas, ações judiciais e prejuízos financeiros. Garante conformidade com as normas, segurança jurídica e proteção à imagem da empresa.",
           code: "LAB002",
           url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONS/Compliance-Trabalhista-e-Previdenci%C3%A1ria.aspx",
@@ -1205,7 +1206,7 @@
         },
 
         {
-          name: " IRPF – Anual",
+          name: "IRPF – Anual",
           description: "Realiza o preenchimento, revisão e entrega da declaração do Imposto de Renda Pessoa Física (IRPF), com acompanhamento de todas as fichas e consultoria patrimonial. Garante o cumprimento da obrigação legal, evita multas e bloqueios no CPF, e assegura que os dados estejam corretos e otimizados para reduzir riscos fiscais e apoiar o planejamento financeiro do contribuinte.",
           code: "OCT009-01",
           url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/IRPF-%E2%80%93-Anual.aspx",
@@ -1875,7 +1876,7 @@
           area: "Soluções Financeiras"
         },
          {
-          name: " B.I. – Implantação Sistema Atua",
+          name: "B.I. – Implantação Sistema Atua",
           description: "É um serviço de BI especializado para empresas de transporte e logística que utilizam o TMS Atua. Através de dashboards interativos e automatizados, consolidamos dados operacionais, financeiros e estratégicos, proporcionando visão unificada e gestão eficiente.",
           code: "ABI001",
           url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INT/B.I.---Implanta%C3%A7%C3%A3o-Sistema-Atua.aspx",
@@ -1968,7 +1969,7 @@ $scope.filterByArea();
 $scope.orderList = "name"; // Ordenar por Nome (A–Z) como padrão
 
 // Função de Ordenação Personalizada
-$scope.customOrder = function (item) {
+$scope.updateSorting = function () {
   const priorityOrder = {
     "Alta": 1,
     "Média": 2,
@@ -1976,24 +1977,22 @@ $scope.customOrder = function (item) {
   };
 
   if ($scope.orderList === "highToLow") {
-    return -priorityOrder[item.priority] || 99; // Alta → Baixa
+    $scope.customOrder = function (item) {
+      return priorityOrder[item.priority] || 99;
+    };
+  } else if ($scope.orderList === "lowToHigh") {
+    $scope.customOrder = function (item) {
+      return -priorityOrder[item.priority] || -99;
+    };
+  } else {
+    $scope.customOrder = $scope.orderList;
   }
-  if ($scope.orderList === "lowToHigh") {
-    return priorityOrder[item.priority] || 99; // Baixa → Alta
-  }
-
-  return item.name; // Padrão: Nome (A-Z)
 };
 
-// Aplicar a ordenação ao carregar
-$scope.filteredNotebooks = $scope.notebooks.sort((a, b) => {
-  if (a.name < b.name) return -1;
-  if (a.name > b.name) return 1;
-  return 0;
-});
 
 // Chamar a função de filtro para garantir que a lista inicial esteja correta
-$scope.filterByArea();
+$scope.updateSorting();
+
 
   
 
