@@ -1,0 +1,2025 @@
+<!DOCTYPE html>
+<html lang="pt-br" ng-app="notebooks">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Busca com Lupa</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+
+  <style>
+    body {
+      font-family: 'Calibri Light', sans-serif;
+      background: #fff;
+           margin: 0;
+  padding: 0;
+  height: 100%;
+      overflow: hidden; /* <- ESSENCIAL pra sumir a rolagem do body */
+    }
+
+    #notebooks {
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background-color: #f4f4f4;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+
+
+.fixed-filters {
+  position: sticky;
+  top: 0;
+  background-color: #f4f4f4;
+  padding: 16px 0 12px;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+
+    .search-container {
+      position: relative;
+      margin-bottom: 15px;
+    }
+
+    .search-container input {
+      width: 100%;
+      height: 44px;
+      padding: 10px 12px 10px 42px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    .search-icon {
+      position: absolute;
+      top: 50%;
+      left: 14px;
+      transform: translateY(-50%);
+      font-size: 16px;
+      color: #0000008a;
+      pointer-events: none;
+    }
+
+    select {
+      width: 100%;
+      height: 36px;
+      padding: 5px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+      border-radius: 4px;
+    }
+
+    .product-count {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 15px;
+    }
+
+    ul {
+      padding: 0;
+      margin: 0;
+      list-style: none;
+      width: 100%;
+    }
+
+    li {
+      background: white;
+      padding: 12px 15px;
+      border-left: 4px solid #3fccb9;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    strong {
+      display: block;
+      color: #444;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 5px;
+    }
+
+    .title-row strong {
+      font-weight: bold;
+      font-size: 16px;
+      color: #444;
+      margin: 0;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .code {
+      font-size: 12px;
+      color: #888;
+      margin-left: 10px;
+      flex-shrink: 0;
+    }
+
+    .material-symbols-outlined {
+  vertical-align: middle;
+  font-size: 20px;
+  margin-right: 6px;
+  color: #0000008a
+}
+
+
+    /* Garante que o layout use toda a tela no mobile */
+    @media (max-width: 600px) {
+  html, body {
+    font-size: 16px;
+    margin: 0;
+    padding: 0;
+  }
+
+  #notebooks {
+    padding: 16px 12px;
+  }
+
+  .fixed-filters {
+    padding: 16px 0 10px;
+  }
+
+  .search-container input {
+    width: 100%;
+    font-size: 18px;
+    height: 52px;
+    padding: 10px 12px 10px 42px;
+    border: 1px solid #ccc;
+  }
+
+  select {
+    width: 100%;
+    font-size: 18px;
+    height: 48px;
+    margin-bottom: 16px;
+    padding: 8px 10px;
+  }
+
+  .product-count {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+
+  li {
+    padding: 20px 16px;
+  }
+
+  .title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .title-row strong {
+    font-size: 20px;
+    white-space: normal;
+    line-height: 1.4;
+  }
+
+  .code {
+    font-size: 17px;
+    color: #666;
+    margin-left: 0;
+  }
+
+  p {
+    font-size: 18px;
+    line-height: 1.6;
+  }
+}
+.form-icon {
+  color: #888;
+  font-size: 18px;
+  transition: color 0.2s ease;
+}
+
+.form-icon:hover {
+  color: #0078d4;
+}
+
+    .product-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      gap: 8px;
+    }
+
+    .download-btn {
+      background-color: #f4f4f4;
+      border: 1px solid #dcdcdc;
+      border-radius: 4px;
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      color: #0078d4;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .download-btn:hover {
+      background-color: #0078d4;
+      color: #ffffff;
+    }
+
+    .product-count {
+      font-size: 16px;
+      color: #555;
+    }
+
+/* Prioridade */
+    .priority-tag {
+  display: inline-block;
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 16px;
+  font-weight: 600;
+  text-align: center;
+  color: #fff;
+}
+
+.priority-tag.alta {
+  background-color: #e74c3c; /* Vermelho para Alta */
+}
+
+.priority-tag.media {
+  background-color: #f2ac3c; /* Laranja para Média */
+}
+
+.priority-tag.baixa {
+  background-color: #2ecc71; /* Verde para Baixa */
+}
+
+/* Selecao de areas */
+.filter-container {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.filter-container label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.filter-container input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: #0078d4;
+}
+
+
+  </style>
+</head>
+
+<body ng-controller="NotebookListCtrl">
+  <div id="notebooks">
+    
+    <div class="fixed-filters">
+      <div class="search-container">
+        <i class="fas fa-search search-icon"></i>
+        <input
+          type="text"
+          id="query"
+          ng-model="query"
+          placeholder="Pesquisar produtos…"
+          autocomplete="off"
+        />
+      </div>
+
+
+<div class="filter-container">
+  <label>
+    <input type="checkbox" ng-checked="selectedAreas.length === 0" ng-click="toggleAllAreas()"> Todas as Áreas
+  </label>
+  <label>
+    <input type="checkbox" ng-model="selectedAreas['Jurídico']" ng-change="filterByArea()"> Jurídico
+  </label>
+  <label>
+    <input type="checkbox" ng-model="selectedAreas['Contabilidade']" ng-change="filterByArea()"> Contabilidade
+  </label>
+  <label>
+    <input type="checkbox" ng-model="selectedAreas['Investimentos']" ng-change="filterByArea()"> Investimentos
+  </label>
+  <label>
+    <input type="checkbox" ng-model="selectedAreas['Soluções Financeiras']" ng-change="filterByArea()"> Soluções Financeiras
+  </label>
+  <label>
+    <input type="checkbox" ng-model="selectedAreas['Auditoria']" ng-change="filterByArea()"> Auditoria
+  </label>
+    <label>
+    <input type="checkbox" ng-model="selectedAreas['Consultoria']" ng-change="filterByArea()"> Consultoria
+  </label>
+  <label>
+    <input type="checkbox" ng-model="selectedAreas['Inteligência de Dados']" ng-change="filterByArea()"> Inteligência de Dados
+  </label>
+  <label>
+    <input type="checkbox" ng-model="selectedAreas['Gestão Tributária']" ng-change="filterByArea()"> Gestão Tributária
+  </label>
+</div>
+
+      
+      
+<select ng-model="orderList">
+  <option value="name">Ordenar por Nome (A–Z)</option>
+  <option value="-code">Ordenar por Mais Recentes</option>
+  <option value="code">Ordenar por Mais Antigos</option>
+  <option value="highToLow">Ordenar por Prioridade (Baixa → Alta)</option>
+  <option value="lowToHigh">Ordenar por Prioridade (Alta → Baixa)</option>
+</select>
+
+
+
+
+
+  <div class="product-info">
+<div class="product-count">
+  <span class="material-symbols-outlined">package_2</span>
+  Produtos: {{filteredNotebooks.length}}
+</div>
+    <button class="download-btn" ng-click="exportToExcel()" title="Download">
+      <i class="fas fa-cloud-download-alt"></i>
+    </button>
+  </div>
+
+    </div> <!-- Fim da fixed-filters -->
+
+    <div class="product-list">
+<ul>
+  <li ng-repeat="notebook in filteredNotebooks | filter:query | orderBy: customOrder">
+    <div class="title-row">
+      <strong>{{notebook.name}}</strong>
+    
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="code">{{notebook.code}}</span>
+        <a 
+          ng-href="{{notebook.url}}" 
+          target="_blank" 
+          class="form-icon" 
+          title="Ver página do produto">
+          <i class="fas fa-file-alt"></i>
+        </a>
+      </div>
+    </div>
+    <p>{{notebook.description}}</p>
+    <span class="priority-tag" ng-class="{'alta': notebook.priority === 'Alta', 'media': notebook.priority === 'Média', 'baixa': notebook.priority === 'Baixa'}">
+      {{notebook.priority}}
+    </span>
+  </li>
+</ul>
+
+
+    </div>
+    
+
+
+  <script>
+    var notebooks = angular.module('notebooks', []);
+
+    notebooks.controller('NotebookListCtrl', function ($scope) {
+      $scope.notebooks = [
+        {
+          name: "Acordo de Sócios e Acionistas / Pacto Familiar",
+          description: "Estrutura acordos entre sócios, acionistas ou familiares para definir regras de gestão, sucessão, entrada e saída de membros e resolução de conflitos, garantindo segurança jurídica e continuidade do negócio.",
+          code: "JUR01",
+           url: "https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Acordo-de-S%C3%B3cios-e-Acionistas---Pacto-Familiar.aspx",
+              priority: "Média",
+              area: "Jurídico"
+        },
+        {
+          name: "Planejamento Sucessório e Patrimonial (Holding e Administradora de Bens)",
+          description: "Estrutura a sucessão e a proteção do patrimônio familiar por meio de holding ou administradora de bens, com foco em economia tributária, blindagem jurídica e continuidade segura dos bens e empresas entre gerações.",
+          code: "JUR04",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Planejamento-Sucess%C3%B3rio-e-Patrimonial-(Holding-e-Administradora-de-Bens).aspx",
+          priority: "Alta",
+          area: "Jurídico"
+        },
+        {
+          name: "Reorganização Societária (Incorporação, Fusão E Cisão)",
+          description: "Planeja e executa processos de reorganização societária, como incorporação, fusão e cisão, com foco em eficiência tributária, alinhamento estratégico e conformidade legal entre empresas ou estruturas familiares.",
+          code: "JUR05",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reorganiza%C3%A7%C3%A3o-Societ%C3%A1ria-(Incorpora%C3%A7%C3%A3o,-Fus%C3%A3o-E-Cis%C3%A3o).aspx",
+          priority: "Baixa",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Fusões e Aquisições (M&A)",
+          description: "Conduz processos de fusões e aquisições (M&A), desde a análise estratégica até a estruturação jurídica e tributária da operação, garantindo segurança, valorização do negócio e tomada de decisão assertiva.",
+          code: "JUR214",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Fus%C3%B5es-e-Aquisi%C3%A7%C3%B5es-(M&A).aspx",
+            priority: "Média",
+            area: "Jurídico"
+        },
+
+        {
+          name: "Auditoria para verificação de adequação à LGPD",
+          description: "Realiza auditoria para avaliar se a empresa está em conformidade com a LGPD, identificando riscos, falhas e oportunidades de adequação na coleta, uso e proteção de dados pessoais, com foco em segurança jurídica e governança.",
+          code: "JUR02",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Auditoria-para-verifica%C3%A7%C3%A3o-de-adequa%C3%A7%C3%A3o-%C3%A0-LGPD.aspx",
+          priority: "Média",    
+          area: "Jurídico"
+        },
+
+        {
+          name: "Consultoria para implementação de Compliance e Antissuborno",
+          description: "Estrutura programas de compliance e antissuborno, com políticas, controles e treinamentos para prevenir fraudes, garantir integridade nas relações e atender às exigências legais e de governança corporativa.",
+          code: "JUR06",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Consultoria-para-implementa%C3%A7%C3%A3o-de-Compliance-e-Antissuborno.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Consultoria em LGPD",
+          description: "Consultoria jurídica especializada para adequação à Lei Geral de Proteção de Dados (Lei nº 13.709/2018), com diagnóstico, mapeamento de riscos e implementação de políticas, contratos e controles internos que garantam a conformidade legal no tratamento de dados pessoais. A consultoria pode incluir também treinamentos, pareceres e acompanhamento jurídico em eventuais incidentes ou comunicações com a ANPD.",
+          code: "JUR209",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Consultoria-em-LGPD.aspx",
+           priority: "Média",
+           area: "Jurídico"
+        },
+
+        {
+          name: "Gestão e elaboração de Contratos Empresariais",
+          description: "Redação, revisão e análise de contratos empresariais diversos, com linguagem jurídica adequada e cláusulas personalizadas conforme os interesses das partes envolvidas na negociação. O serviço pode abranger tanto a elaboração do zero quanto a revisão técnica e estratégica de documentos já existentes.",
+          code: "JUR08",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Gest%C3%A3o-e-elabora%C3%A7%C3%A3o-de-Contratos-Empresariais.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Crédito de ICMS sobre os Insumos do Transporte",
+          description: "Amplia a base de insumos que geram crédito de ICMS para transportadoras, incluindo itens além dos previstos no RICMS, como lubrificantes, peças, ARLA e materiais de manutenção, com respaldo legal e foco na recuperação segura de créditos.",
+          code: "JUR07",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Cr%C3%A9dito-de-ICMS-sobre-os-Insumos-do-Transporte.aspx",
+          priority: "Média",    
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Imunidade de PIS COFINS em operações para Zona Franca de Manaus e Áreas de Livre Comércio",
+          description: "Busca o reconhecimento da imunidade de PIS e COFINS sobre receitas de fretes contratados por pessoas físicas ou jurídicas da Zona Franca de Manaus e Áreas de Livre Comércio, garantindo isenção legal e economia tributária.",
+          code: "JUR114",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Imunidade-de-PIS-COFINS-em-opera%C3%A7%C3%B5es-para-Zona-Franca-de-Manaus-e-%C3%81reas-de-Livre-Com%C3%A9rcio.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Imunidade PIS/COFINS – Operações Destinadas à Exportação",
+          description: "Reconhece a imunidade de PIS e COFINS em operações com mercadorias destinadas à exportação, garantindo o não pagamento dessas contribuições e permitindo a recuperação de valores pagos indevidamente, com respaldo constitucional.",
+          code: "JUR121",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Imunidade-PIS-COFINS-%E2%80%93-Opera%C3%A7%C3%B5es-Destinadas-%C3%A0-Exporta%C3%A7%C3%A3o.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Manutenção dos créditos de PIS e COFINS sobre o ICMS nas entradas",
+          description: "Consultoria jurídica e tributária voltada à reivindicação do direito de manutenção dos créditos de PIS e COFINS sobre o ICMS incidente nas operações de entrada de insumos. O serviço visa contestar a vedação trazida pela Lei 14.592/23, considerada inconstitucional, promovendo a recuperação de valores indevidamente recolhidos nos últimos 5 anos.",
+          code: "JUR09",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Manuten%C3%A7%C3%A3o-dos-cr%C3%A9ditos-de-PIS-e-COFINS-sobre-o-ICMS-nas-entradas.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Redução da Base de  Cálculo do INSS Autônomos para 11,71%",
+          description: "Aplica tese jurídica que reconhece o direito à redução da base de cálculo do INSS sobre pagamentos a autônomos, de 20% para 11,71%, gerando economia previdenciária com respaldo legal e segurança na gestão da folha.",
+          code: "JUR117",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Redu%C3%A7%C3%A3o-da-Base-de-C%C3%A1lculo-do-INSS-Aut%C3%B4nomos-para-11,71-.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Exclusão do ICMS / ISS da Base do PIS e COFINS",
+          description: "Aplica teses jurídicas que garantem a exclusão do ICMS e/ou ISS da base de cálculo do PIS e da COFINS, permitindo a recuperação de valores pagos indevidamente e a redução legal da carga tributária futura.",
+          code: "JUR105",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Exclus%C3%A3o-do-ICMS---ISS-da-Base-do-PIS-e-COFINS.aspx",
+          priority: "Média",  
+          area: "Jurídico"
+        },
+
+
+        {
+          name: "Reconhecimento de Exclusão do Crédito Presumido ICMS do IRPJ E CSLL",
+          description: "Aplica a tese jurídica que permite a exclusão do crédito presumido de ICMS da base de cálculo do IRPJ e da CSLL, evitando bitributação e possibilitando a recuperação de valores pagos indevidamente, com respaldo do STF.",
+          code: "JUR106",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Exclus%C3%A3o-do-Cr%C3%A9dito-Presumido-ICMS-do-IRPJ-E-CSLL.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Exclusão do PIS / COFINS de sua Própria Base",
+          description: "Aplica a tese que permite excluir o PIS e a COFINS da própria base de cálculo, evitando a cobrança em cascata e possibilitando a recuperação de valores pagos a mais, com respaldo jurídico e foco na redução da carga tributária.",
+          code: "JUR107",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Exclus%C3%A3o-do-PIS---COFINS-de-sua-Pr%C3%B3pria-Base.aspx",
+           priority: "Média",
+           area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Imunidade de ICMS no Transporte de Mercadorias Destinadas a Exportação",
+          description: "Busca o reconhecimento jurídico da imunidade do ICMS incidente sobre o transporte de mercadorias destinadas à exportação, com fundamento constitucional, garantindo a exclusão da cobrança indevida e a segurança jurídica das operações.",
+          code: "JUR110",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Imunidade-de-ICMS-no-Transporte-de-Mercadorias-Destinadas-a-Exporta%C3%A7%C3%A3o.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Não incidência de Contribuição Previdenciária sobre PLR de diretores estatutários",
+          description: "Aplica tese jurídica que reconhece a não incidência de contribuição previdenciária sobre valores pagos a título de PLR a diretores estatutários, garantindo segurança jurídica e redução de encargos sobre a remuneração variável.",
+          code: "JUR10",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-N%C3%A3o-incid%C3%AAncia-de-Contribui%C3%A7%C3%A3o-Previdenci%C3%A1ria-sobre-PLR-de-diretores-estatut%C3%A1rios.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+
+        {
+          name: "Reconhecimento de Exclusão da base de cálculo do INSS os valores pagos aos aprendizes",
+          description: "Aplica tese jurídica que reconhece a exclusão dos valores pagos a aprendizes da base de cálculo do INSS, garantindo economia previdenciária e afastando cobranças indevidas com respaldo na legislação e jurisprudência.",
+          code: "JUR11",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Exclus%C3%A3o-da-base-de-c%C3%A1lculo-do-INSS-os-valores-pagos-aos-aprendizes.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Diferimento do IRPJ/CSLL e PIS/COFINS sobre a contrapartida da Indústria ao Fundo de Risco e Garantia (Fundão)",
+          description: "Aplica tese jurídica que permite o diferimento do IRPJ, CSLL, PIS e COFINS sobre os valores repassados pela indústria ao Fundo de Risco e Garantia (Fundão), postergando a tributação e garantindo segurança jurídica e eficiência fiscal.",
+          code: "JUR12",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Diferimento-do-IRPJ-CSLL-e-PIS-COFINS-sobre-a-contrapartida-da-Ind%C3%BAstria-ao-Fundo-de-Risco-e-Garantia-(Fund%C3%A3o).aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        
+        {
+          name: "Reconhecimento de Crédito de PIS e COFINS sobre o IPI recuperável e não recuperável",
+          description: "Reconhece o direito ao crédito de PIS e COFINS sobre valores de IPI destacados nas notas fiscais de entrada, tanto recuperáveis quanto não recuperáveis, garantindo aproveitamento fiscal ampliado com respaldo legal e jurisprudencial.",
+          code: "JUR101-01",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Cr%C3%A9dito-de-PIS-e-COFINS-sobre-o-IPI-recuper%C3%A1vel-e-n%C3%A3o-recuper%C3%A1vel.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Inexigibilidade da TFTG e CEG no Maranhão",
+          description: "Busca obter declaração judicial de inexigibilidade da TFTG e da CEG cobradas pelo Estado do Maranhão, com o objetivo de afastar cobranças indevidas e viabilizar a recuperação de valores pagos sem respaldo legal.",
+          code: "JUR13",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Inexigibilidade-da-TFTG-e-CEG-no-Maranh%C3%A3o.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Imunidade de PIS, COFINS e ISS sobre Armazenagem ",
+          description: "Busca interpretação favorável para reconhecer que a armazenagem integra a cadeia de exportação, garantindo a imunidade de PIS, COFINS e ISS sobre essa receita, com respaldo constitucional e foco na redução da carga tributária.",
+          code: "JUR14",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Imunidade-de-PIS,-COFINS-e-ISS-sobre-Armazenagem.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Imunidade de FUNRURAL na exportação de produtos comercializados por produtos rurais pessoas físicas",
+          description: "Busca o reconhecimento da imunidade da contribuição ao FUNRURAL sobre a receita de exportação de produtos comercializados por produtores rurais pessoas físicas, com base constitucional, garantindo isenção legal e recuperação de valores pagos indevidamente.",
+          code: "JUR15",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Imunidade-de-FUNRURAL-na-exporta%C3%A7%C3%A3o-de-produtos-comercializados-por-produtos-rurais-pessoas.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Crédito de PIS e COFINS sobre Insumos Estratégicos no Transporte",
+          description: "Aplica tese jurídica que amplia o conceito de insumo no setor de transporte, reconhecendo o direito ao crédito de PIS e COFINS sobre despesas como plano de saúde, plano odontológico, vale alimentação e softwares de controle de frota, com respaldo na atividade-fim e na jurisprudência.",
+          code: "JUR101-02",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Cr%C3%A9dito-de-PIS-e-COFINS-sobre-Insumos-Estrat%C3%A9gicos-no-Transporte.aspx",
+          priority: "Média",
+          area: "Jurídico"
+
+        },
+
+        {
+          name: "Reconhecimento Judicial de Crédito de ICMS em Transporte Internacional",
+          description: "Busca declaração judicial que reconheça o direito da transportadora ao aproveitamento de créditos de ICMS em operações cujo transporte se encerra fora do território nacional, garantindo economia tributária com respaldo legal e constitucional.",
+          code: "JUR16",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-Judicial-de-Cr%C3%A9dito-de-ICMS-em-Transporte-Internacional.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Declaração de Estorno de crédito de ICMS em operações de transporte iniciados em outros estados",
+          description: "Busca declaração judicial que permita à transportadora a não realizar o estorno dos créditos de ICMS nas operações de transporte iniciadas em outros estados, assegurando a manutenção dos créditos com respaldo legal e segurança fiscal.",
+          code: "JUR17",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Declara%C3%A7%C3%A3o-de-Estorno-de-cr%C3%A9dito-de-ICMS-em-opera%C3%A7%C3%B5es-de-transporte-iniciados-em-outros-estados.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Due Diligence",
+          description: "Procedimento de investigação profunda sobre aspectos jurídicos, financeiros, fiscais e operacionais da empresa, com o objetivo de identificar riscos e passivos que possam impactar compradores, investidores, fornecedores e demais stakeholders.",
+          code: "JUR213",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Due-Diligence.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Defesas de demandas perante a ANTT",
+          description: "Elabora e conduz defesas administrativas e recursos perante a ANTT, em demandas relacionadas a autos de infração, penalidades e exigências regulatórias, garantindo segurança jurídica e preservação dos direitos da transportadora.",
+          code: "JUR18",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Defesas-de-Demandas-Perante-a-ANTT.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Defesas em Execuções Fiscais",
+          description: "Atua na defesa de empresas em execuções fiscais, com estratégias jurídicas para contestar cobranças indevidas, suspender exigibilidades e preservar o patrimônio, garantindo segurança jurídica e gestão eficiente de passivos tributários.",
+          code: "JUR19",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Defesas-em-Execu%C3%A7%C3%B5es-Fiscais.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Defesas, Impugnações e Recursos Administrativos",
+          description: "Atuação completa em Direito Civil, englobando demandas não previstas em produtos específicos, como ações indenizatórias, possessórias, execuções, cobranças e demais disputas civis, com foco em soluções estratégicas e segurança jurídica.",
+          code: "JUR03",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Defesas,-Impugna%C3%A7%C3%B5es-e-Recursos-Administrativos.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Demandas de Direito Civil",
+          description: "Atua em demandas diversas de Direito Civil, como indenizações, ações possessórias, execuções, cobranças e outras disputas judiciais, oferecendo soluções jurídicas completas e seguras conforme a necessidade do cliente.",
+          code: "JUR201",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Demandas-de-Direito-Civil.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Demandas do Direito Trabalhista",
+          description: "Atua na apresentação de defesas em processos administrativos e judiciais, representação perante sindicatos e Ministério Público do Trabalho, além da homologação de acordos extrajudiciais, garantindo segurança jurídica e gestão estratégica de passivos.",
+          code: "JUR202",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Demandas-do-Direito-Trabalhista.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Demandas de Direito Administrativo",
+          description: "Atuação completa em Direito Administrativo, abrangendo demandas não previstas em outros produtos específicos, como defesas em processos administrativos, questões envolvendo contratos públicos, pareceres jurídicos e relações com a Administração Pública.",
+          code: "JUR204",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Demandas-de-Direito-Administrativo.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Demandas de Direito Tributário",
+          description: "Atuação em demandas contenciosas e consultivas de Direito Tributário, abrangendo execuções fiscais, defesas administrativas, ações anulatórias, mandados de segurança, restituições e orientações estratégicas para redução de riscos e passivos fiscais.",
+          code: "JUR206",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Demandas-de-Direito-Tribut%C3%A1rio.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Demandas de Direito de Família e Sucessões",
+          description: "Atuação em ações judiciais e extrajudiciais relacionadas ao Direito de Família e Sucessões, como divórcios, partilhas, inventários, guarda, alimentos e testamentos, com foco na proteção patrimonial, mediação de conflitos e segurança jurídica.",
+          code: "JUR207",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Demandas-de-Direito-de-Fam%C3%ADlia-e-Sucess%C3%B5es.aspx",  
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Demandas de Direito Empresarial",
+          description: "Atuação em disputas e questões jurídicas que envolvem empresas, como conflitos societários, responsabilidade de sócios e administradores, cobrança de contratos empresariais, dissoluções e reorganizações, com foco em segurança jurídica e preservação do negócio.",
+          code: "JUR20",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Demandas-de-Direito-Empresarial.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Jurídico Recorrente",
+          description: "Prestação contínua de serviços jurídicos para empresas, com acompanhamento consultivo e contencioso em diversas áreas do direito, atendimento a demandas rotineiras, elaboração de pareceres, contratos e defesas, garantindo suporte estratégico e segurança jurídica no dia a dia.",
+          code: "JUR21",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Jur%C3%ADdico-Recorrente.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Terceirização de Cobranças",
+          description: "Atua na recuperação de créditos por meio da cobrança extrajudicial e judicial, com gestão completa do processo, negociação com devedores e adoção de medidas legais, garantindo eficiência na recuperação e redução da inadimplência empresarial.",
+          code: "JUR22",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Terceiriza%C3%A7%C3%A3o-de-Cobran%C3%A7as.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Constituição e Regularização de Empresas",
+          description: "Realiza a abertura e regularização de empresas em todas as esferas, incluindo registro em órgãos competentes, obtenção de licenças e enquadramentos fiscais, garantindo conformidade legal e segurança desde a formalização até a operação",
+          code: "JUR23",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Constitui%C3%A7%C3%A3o-e-Regulariza%C3%A7%C3%A3o-de-Empresas.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Mandado de Segurança",
+          description: "Ajuizamento de mandado de segurança para proteger direitos líquidos e certos diante de ilegalidades ou abusos de autoridade praticados por agentes públicos, com foco em garantir a efetividade dos direitos da empresa com agilidade e segurança jurídica.",
+          code: "JUR100",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Mandado-de-Seguran%C3%A7a.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Não Incidência de Funrural sobre Operações PJ",
+          description: "Aplica tese jurídica que reconhece a não incidência da contribuição ao Funrural em operações realizadas entre pessoas jurídicas, garantindo segurança jurídica e possibilitando a recuperação de valores pagos indevidamente pelo adquirente",
+          code: "JUR24",
+          url: "https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/N%C3%A3o-Incid%C3%AAncia-de-Funrural-sobre-Opera%C3%A7%C3%B5es-PJ.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Crédito de PIS / COFINS Sobre PJ e PF",
+          description: "Reconhece o direito ao crédito de PIS e COFINS em aquisições realizadas de pessoas físicas ou jurídicas não contribuintes, com base em interpretação ampliada da legislação, gerando economia tributária e segurança jurídica para o adquirente.",
+          code: "JUR101",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Cr%C3%A9dito-de-PIS---COFINS-Sobre-PJ-e-PF.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento da Exclusão de ICMS e ISS na Base da CPRB",
+          description: "Análise jurídica e técnica para excluir o ICMS e ISS da base de cálculo da Contribuição Previdenciária sobre a Receita Bruta (CPRB), garantindo redução da carga tributária e recuperação de valores pagos indevidamente, com base em jurisprudência consolidada.",
+          code: "JUR113",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-da-Exclus%C3%A3o-de-ICMS-e-ISS-na-Base-da-CPRB.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Não Incidência de IRPJ e CSLL sobre Juros de Correção Monetária (Selic)",
+          description: "Aplica tese jurídica que reconhece a não incidência de IRPJ e CSLL sobre valores recebidos a título de correção monetária (Selic) em repetição de indébito, afastando a tributação sobre verbas de natureza indenizatória e viabilizando a recuperação de valores pagos indevidamente.",
+          code: "JUR103",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-N%C3%A3o-Incid%C3%AAncia-de-IRPJ-e-CSLL-sobre-Juros-de-Corre%C3%A7%C3%A3o-Monet%C3%A1ria-(Selic).aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+        
+
+
+        {
+          name: "Reconhecimento de Imunidade CPRB  Operações Destinadas a Exportação",
+          description: "Aplica tese jurídica que reconhece a imunidade da Contribuição Previdenciária sobre Receita Bruta (CPRB) nas receitas decorrentes de operações de exportação, com respaldo constitucional e foco na redução da carga tributária.",
+          code: "JUR122",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Imunidade-CPRB-Opera%C3%A7%C3%B5es-Destinadas-a-Exporta%C3%A7%C3%A3o.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Crédito de PIS/COFINS sobre Taxas de DETRAN e ANTT",
+          description: "Aplica tese jurídica que reconhece o direito ao crédito de PIS e COFINS sobre valores pagos compulsoriamente a título de taxas e contribuições ao DETRAN e à ANTT, com foco no setor de transporte e respaldo na essencialidade para a atividade-fim.",
+          code: "JUR211",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Cr%C3%A9dito-de-PIS-COFINS-sobre-Taxas-de-DETRAN-e-ANTT.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Subvenção em Importações",
+          description: "Análise jurídica para garantir que a empresa possa reconhecer subvenções em operações de importação, assegurando o direito a benefícios fiscais e incentivos tributários concedidos em importações de bens e insumos. O serviço visa otimizar a carga tributária e assegurar conformidade com a legislação vigente.",
+          code: "JUR212",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Subven%C3%A7%C3%A3o-em-Importa%C3%A7%C3%B5es.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Ressarcimento INSS Sob Sistema S",
+          description: "Análise e assessoria jurídica para que a empresa recupere valores pagos indevidamente ao INSS sobre o Sistema 'S' (SESI, SENAI, SEBRAE, SESC, SENAC, entre outros). O serviço visa identificar valores pagos a maior e promover o ressarcimento desses montantes junto à Receita Federal, garantindo economia financeira.",
+          code: "JUR115",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Ressarcimento-INSS-Sob-Sistema-S.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Suspensão do PIS / COFINS das Operações Destinadas a Recinto Alfandegado",
+          description: "Análise jurídica e suporte técnico para garantir que a empresa possa suspender o recolhimento de PIS e COFINS em operações de venda ou prestação de serviços destinados a recintos alfandegados (zonas primárias e secundárias), com base em legislação específica. O serviço visa assegurar a correta aplicação da suspensão e, quando aplicável, promover a recuperação de valores pagos indevidamente.",
+          code: "JUR218",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Suspens%C3%A3o-do-PIS---COFINS-das-Opera%C3%A7%C3%B5es-Destinadas-a-Recinto-Alfandegado.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Nao Incidencia de PIS/COFINS Sobre o Credito Presumido",
+          description: "Aplica tese jurídica que reconhece a não incidência de PIS e COFINS sobre créditos presumidos de ICMS concedidos pelos estados como incentivo fiscal, com base em jurisprudência consolidada do STF, viabilizando recuperação de valores pagos indevidamente.",
+          code: "JUR28",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-N%C3%A3o-Incid%C3%AAncia-de-PIS-COFINS-Sobre-o-Credito-Presumido.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Exclusão dos Benefícios Fiscais de ICMS da Base De Cálculo do IRPJ/CSLL - Subvenções",
+          description: "Aplica tese jurídica que permite a exclusão de subvenções fiscais de ICMS da base de cálculo do IRPJ e da CSLL, conforme entendimento do STF, garantindo redução da carga tributária e recuperação de valores pagos indevidamente.",
+          code: "JUR102",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Exclus%C3%A3o-dos-Benef%C3%ADcios-Fiscais-de-ICMS-da-Base-De-C%C3%A1lculo-do-IRPJ-CSLL---Subven%C3%A7%C3%B5es.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de INSS sobre verbas indenizatórias",
+          description: "Aplica tese jurídica que reconhece a natureza indenizatória de determinadas verbas pagas aos empregados, afastando a incidência de INSS sobre esses valores e possibilitando a recuperação de contribuições previdenciárias pagas indevidamente.",
+          code: "JUR108",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-INSS-sobre-verbas-indenizat%C3%B3rias.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Exclusão do ICMS ST da Base do PIS e COFINS",
+          description: "Aplica tese jurídica que reconhece o direito de excluir o ICMS-ST da base de cálculo do PIS e da COFINS, com fundamento em jurisprudência do STF, permitindo a recuperação de valores pagos indevidamente e a redução da carga tributária futura",
+          code: "JUR109",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Exclus%C3%A3o-do-ICMS-ST-da-Base-do-PIS-e-COFINS.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Não Incidência de PIS/COFINS sobre Receitas Financeiras",
+          description: "Aplica tese jurídica que busca o reconhecimento da não incidência de PIS e COFINS sobre receitas financeiras, como rendimentos de aplicações, juros e variações monetárias, visando à redução da carga tributária e recuperação de valores pagos indevidamente.",
+          code: "JUR112",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-N%C3%A3o-Incid%C3%AAncia-de-PIS-COFINS-sobre-Receitas-Financeiras.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Crédito de PIS/COFINS S/ ICMS-ST de Compra",
+          description: "Aplica tese jurídica que reconhece o direito ao crédito de PIS e COFINS sobre o valor do ICMS-ST incidente nas aquisições de mercadorias, ampliando a base de aproveitamento de créditos e gerando economia tributária com respaldo jurisprudencial.",
+          code: "JUR120",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Cr%C3%A9dito-de-PIS-COFINS-S--ICMS-ST-de-Compra.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Assessoria Juridica",
+          description: "Prestação de suporte jurídico consultivo contínuo, com orientação estratégica sobre aspectos legais das atividades empresariais, análise de riscos, revisão de contratos e apoio na tomada de decisões, garantindo segurança jurídica no dia a dia da operação.",
+          code: "JUR200",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Assessoria-Jur%C3%ADdica.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Não  incidência  PIS/COFINS Sobre SELIC",
+          description: "Aplica tese jurídica que reconhece a natureza indenizatória da SELIC recebida em devoluções de tributos (repetição de indébito), afastando a incidência de PIS e COFINS sobre esses valores e viabilizando a recuperação de tributos pagos indevidamente.",
+          code: "JUR203",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-N%C3%A3o-incid%C3%AAncia-PIS-COFINS-Sobre-SELIC.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Exclusão do ICMS na Base de Cálculo dos Créditos de PIS/COFINS - (Lei N° 14.592/23)",
+          description: "Aplica a exclusão do ICMS da base de cálculo dos créditos de PIS e COFINS, conforme previsto na Lei nº 14.592/23, promovendo adequação à nova legislação, revisão de apurações e eventual recuperação de créditos utilizados indevidamente.",
+          code: "JUR216",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Exclus%C3%A3o-do-ICMS-na-Base-de-C%C3%A1lculo-dos-Cr%C3%A9ditos-de-PIS-COFINS---(Lei-N%C2%B0-14.592-23).aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Reconhecimento de Imunidade de ISS/ICMS nos fretes destinados à exportação",
+          description: "Busca o reconhecimento da imunidade de ISS e ICMS sobre serviços de transporte vinculados à exportação de mercadorias, com base constitucional, garantindo a não tributação dos fretes e a redução legal da carga tributária nas operações internacionais.",
+          code: "JUR26",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Reconhecimento-de-Imunidade-de-ISS-ICMS-nos-fretes-destinados-%C3%A0-exporta%C3%A7%C3%A3o.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Exclusão do Crédito Presumido de ICMS da Base de Cálculo PIS/COFINS",
+          description: "Aplica tese jurídica que reconhece a exclusão dos créditos presumidos de ICMS da base de cálculo do PIS e da COFINS, com fundamento em decisão do STF, evitando bitributação e viabilizando a recuperação de valores pagos indevidamente.",
+          code: "JUR27",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Exclus%C3%A3o-do-Cr%C3%A9dito-Presumido-de-ICMS-da-Base-de-C%C3%A1lculo-PIS-COFINS.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Implementação de LGPD",
+          description: "Realiza o processo completo de adequação à Lei Geral de Proteção de Dados (LGPD), com mapeamento de dados, revisão de políticas internas, elaboração de documentos legais, treinamentos e orientações práticas para garantir conformidade, transparência e segurança jurídica.",
+          code: "JUR25",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20JUR/Implementa%C3%A7%C3%A3o-de-LGPD.aspx",
+          priority: "Média",
+          area: "Jurídico"
+        },
+
+        {
+          name: "Auditoria independente",
+          description: "Verifica se as demonstrações contábeis da empresa foram elaboradas corretamente e seguem as normas exigidas pela legislação. É realizada por auditores externos, que não fazem parte da equipe da empresa, garantindo uma análise imparcial. Esse processo dá mais segurança aos sócios, investidores, instituições financeiras e órgãos reguladores sobre a veracidade das informações contábeis, além de atender exigências legais para determinados portes e segmentos.",
+          code: "AUD001",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20AUD/Auditoria-independente.aspx",
+          priority: "Alta",
+          area: "Auditoria"
+        },
+        {
+          name: "Auditoria Operacional",
+          description: "Analisa os processos internos da empresa para verificar se estão sendo executados de forma eficiente, segura e conforme as regras estabelecidas. Avalia rotinas, controles e procedimentos operacionais para identificar falhas, riscos e oportunidades de melhoria. Garante mais conformidade, segurança e credibilidade na execução das atividades do dia a dia.",
+          code: "AUD003",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20AUD/Auditoria-Operacional.aspx",
+          priority: "Média",
+          area: "Auditoria"
+        },
+        {
+          name: "Auditoria Financeira",
+          description: "Analisa toda a movimentação financeira da empresa para verificar se a origem e a aplicação dos recursos estão de acordo com a atividade da entidade. Permite rastrear os fluxos financeiros, identificar desvios e garantir que os recursos estejam sendo utilizados de forma correta e transparente, trazendo mais segurança e controle para a gestão.",
+          code: "AUD002",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20AUD/Auditoria-Financeira.aspx",
+          priority: "Média",
+          area: "Auditoria"
+        },
+        {
+          name: "Avaliação de Maturidade de Gestão",
+          description: "Analisa o estágio atual da gestão da empresa com base em critérios estruturados, identificando pontos fortes, fragilidades e o nível de maturidade em diferentes áreas do negócio. O resultado serve como base para direcionar as ações da consultoria e auxiliar o cliente na definição de prioridades e melhorias. Garante um diagnóstico claro que ajuda a empresa a evoluir na gestão e tomar decisões mais estratégicas.",
+          code: "FIN012",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONS/Avalia%C3%A7%C3%A3o-de-Maturidade-de-Gest%C3%A3o.aspx",
+          priority: "Alta",
+          area: "Consultoria"
+        },
+        {
+          name: "Diagnóstico Empresarial",
+          description: "Realiza uma análise completa da empresa, dividida por áreas como finanças, processos, pessoas, governança e outras, identificando pontos fortes, falhas e oportunidades de melhoria. Ajuda a direcionar os esforços da gestão, otimizar recursos e corrigir práticas inadequadas que possam prejudicar os resultados. Garante uma visão clara da situação atual do negócio e serve como base para decisões mais assertivas.",
+          code: "FIN009",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONS/Diagn%C3%B3stico-Empresarial.aspx",
+          priority: "Média",
+          area: "Consultoria"
+        },
+        {
+          name: "BPO - Terceirização de processos financeiros",
+          description: "Assume as rotinas financeiras da empresa, como lançamentos, conciliações, contas a pagar e a receber, e gestão do fluxo de caixa. Reduz a sobrecarga da equipe interna, melhora a qualidade das informações financeiras e garante maior controle dos processos. Gera economia com estrutura interna, aumenta a eficiência operacional e contribui para uma gestão financeira mais segura e estratégica.",
+          code: "FIN010",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONS/BPO---Terceiriza%C3%A7%C3%A3o-de-processos-financeiros.aspx",
+          priority: "Alta",
+          area: "Consultoria"
+        },
+
+        {
+          name: "Captação, Renegociação e Gestão de Recursos",
+          description: "Auxilia a empresa na captação de recursos, revisão e renegociação de dívidas, buscando reduzir custos financeiros, melhorar o fluxo de caixa e realocar dívidas de forma estratégica. Ideal para negócios que enfrentam falta de capital de giro, parcelas desajustadas ou necessidade de investir. Garante uma gestão financeira mais equilibrada e sustentável, contribuindo para a saúde econômica da empresa no curto e longo prazo.",
+          code: "ADV011",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONS/Capta%C3%A7%C3%A3o,-Renegocia%C3%A7%C3%A3o-e-Gest%C3%A3o-de-Recursos.aspx",
+          priority: "Média",
+          area: "Consultoria"
+        },
+
+        {
+          name: "Planejamento Orçamentário e Fluxo de Caixa",
+          description: "Organiza e projeta as receitas, despesas e movimentações financeiras da empresa, oferecendo controle, previsibilidade e apoio à tomada de decisões. Ajuda a equilibrar as finanças, planejar investimentos, limitar gastos e alinhar o uso dos recursos às metas do negócio. Garante maior segurança nas decisões financeiras e contribui para a sustentabilidade da empresa no médio e longo prazo.",
+          code: "FIN002",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONS/Planejamento-Or%C3%A7ament%C3%A1rio-e-Fluxo-de-Caixa.aspx",
+          priority: "Alta",
+          area: "Consultoria"
+        },
+
+        {
+          name: "Análise de Viabilidade Econômico-Financeira",
+          description: "Avalia se um projeto, investimento ou nova operação é financeiramente viável, considerando custos, receitas previstas, riscos e cenário de mercado. Ajuda a entender o retorno esperado sobre o capital investido, identificando possíveis ameaças e oportunidades. Garante decisões mais seguras, evitando perdas e apoiando a alocação eficiente dos recursos.",
+          code: "FIN008",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONS/An%C3%A1lise-de-Viabilidade-Econ%C3%B4mico-Financeira.aspx",
+          priority: "Média",
+          area: "Consultoria"
+        },
+
+        {
+          name: "Valuation",
+          description: "Determina o valor econômico de uma empresa ou ativo com base no desempenho financeiro, cenário de mercado e potencial de crescimento. É essencial para processos de reorganização societária, fusões, aquisições, venda de negócios ou captação de investimentos. Fornece uma base sólida para negociações e decisões estratégicas, ajudando a entender os riscos, identificar oportunidades e tomar decisões com mais segurança e embasamento.",
+          code: "M&A001",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONS/Valuation.aspx",
+          priority: "Média",
+          area: "Consultoria"
+          
+        },
+
+        {
+          name: "Gestão de resultados financeiros",
+          description: "Realiza o monitoramento contínuo das receitas, despesas, lucros e fluxo de caixa da empresa, por meio da terceirização da análise financeira. Identifica distorções, aponta oportunidades de melhoria e orienta ajustes necessários para aumentar a rentabilidade. Garante maior controle, transparência e segurança na gestão financeira, apoiando decisões mais assertivas e a sustentabilidade do negócio.",
+          code: "FIN007",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONS/Gest%C3%A3o-de-resultados-financeiros.aspx",
+          priority: "Média",
+          area: "Consultoria"
+        },
+
+        {
+          name: "Implantação de Processos Internos / BPM",
+          description: "Modela, padroniza e estrutura os processos internos da empresa com foco em eficiência, organização e alinhamento aos objetivos estratégicos. Ajuda a eliminar retrabalho, reduzir custos e aumentar a produtividade, criando um ambiente mais ágil, organizado e voltado para a melhoria contínua. Garante operações mais eficientes e sustentáveis, com visão clara das responsabilidades e etapas de cada área.",
+          code: "FIN001",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONS/Implanta%C3%A7%C3%A3o-de-Processos-Internos---BPM.aspx",
+          priority: "Alta",
+          area: "Consultoria"
+        },
+
+        {
+          name: "Planejamento Estratégico",
+          description: "Define os objetivos, metas e ações que irão orientar a empresa no curto, médio e longo prazo, alinhando as decisões com sua visão de futuro. Ajuda a priorizar recursos, melhorar o posicionamento no mercado e tomar decisões mais embasadas. Garante clareza na direção do negócio, maior competitividade, crescimento sustentável e agilidade para se adaptar às mudanças e aproveitar novas oportunidades.",
+          code: "FIN006",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONS/Planejamento-Estrat%C3%A9gico.aspx",
+          priority: "Média",
+          area: "Consultoria"
+        },
+
+        {
+          name: "Consultoria Trabalhista",
+          description: "Oferece suporte especializado para orientar a empresa em questões relacionadas às relações de trabalho, garantindo o cumprimento da legislação e prevenindo riscos jurídicos. Auxilia na tomada de decisões, revisão de práticas internas e adequação de processos. Garante mais segurança nas rotinas trabalhistas, redução de passivos e economia com eventuais custos legais e operacionais.",
+          code: "FIN013",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONS/Consultoria-Trabalhista.aspx",
+          priority: "Média",
+          area: "Consultoria"
+        },
+
+        {
+          name: "Método Funcional",
+          description: "Implanta um modelo de RH estratégico que alinha a gestão de pessoas aos objetivos e metas do negócio. Transforma o RH de uma área apenas operacional para uma área ativa na tomada de decisões, mais segura juridicamente e focada no crescimento da empresa. Garante maior engajamento da equipe, aumento da produtividade, fortalecimento da cultura organizacional e uma gestão de pessoas mais eficaz e alinhada aos resultados.",
+          code: "FIN011",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONS/M%C3%A9todo-Funcional.aspx",
+          priority: "Média",
+          area: "Consultoria"
+        },
+
+        {
+          name: " Compliance Trabalhista e Previdenciária",
+          description: "Verifica se a empresa está cumprindo corretamente a legislação trabalhista e previdenciária, identificando falhas e inconformidades que possam gerar riscos legais. Ajuda a corrigir práticas inadequadas e prevenir multas, ações judiciais e prejuízos financeiros. Garante conformidade com as normas, segurança jurídica e proteção à imagem da empresa.",
+          code: "LAB002",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONS/Compliance-Trabalhista-e-Previdenci%C3%A1ria.aspx",
+          priority: "Alta",
+          area: "Consultoria"
+        },
+
+        {
+          name: "Compensação / Restituição de Tributos Trabalhista e Previdenciária",
+          description: "Identifica créditos oriundos de tributos trabalhistas pagos de forma indevida ou a maior, e realiza os procedimentos necessários para sua recuperação ou compensação. Corrige distorções na apuração de encargos e contribuições, garantindo conformidade com a legislação. Gera economia financeira para a empresa e contribui para uma gestão tributária mais eficiente e segura.",
+          code: "LAB001",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONS/Compensa%C3%A7%C3%A3o---Restitui%C3%A7%C3%A3o-de-Tributos-Trabalhista-e-Previdenci%C3%A1ria.aspx",
+          priority: "Baixa",
+          area: "Consultoria"
+        },
+        {
+          name: "Consultoria  Previdenciária",
+          description: "Orienta a empresa na aplicação correta das normas trabalhistas e previdenciárias, com foco na conformidade legal, na redução de riscos e na melhoria da gestão da folha de pagamento e benefícios. Ajuda a evitar passivos, otimiza custos e garante mais segurança jurídica nas rotinas do departamento pessoal.",
+          code: "FIN014",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONS/Consultoria-Previdenci%C3%A1ria.aspx",
+          priority: "Média",
+          area: "Consultoria"
+        },
+        {
+          name: "BPO Contábil e Tributário - Transportes",
+          description: "Organiza e registra todas as movimentações financeiras e fiscais da empresa de forma correta e dentro da lei. Monta relatórios como DRE, balancete e balanço anual, entrega as obrigações exigidas pelo governo (ECD e ECF), acompanha os resultados e apresenta indicadores para ajudar na tomada de decisões. Garante economia com estrutura interna, reduz riscos tributários e apoia a gestão com informações seguras e úteis.",
+          code: "OCT014",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/BPO-Cont%C3%A1bil-e-Tribut%C3%A1rio---Transportes.aspx",
+          priority: "Alta",
+          area: "Contabilidade"
+        },
+        {
+          name: "BPO Contábil e Tributário – Indústria e Comércio",
+          description: "Cuida de toda a contabilidade e das obrigações fiscais da empresa, garantindo que tudo esteja correto, dentro da lei e entregue no prazo. Registra movimentações, elabora relatórios financeiros claros e úteis (como balancetes, DRE e balanço anual), envia as declarações obrigatórias e acompanha os resultados de perto. Ajuda a reduzir riscos, economizar com estrutura interna e oferece informações seguras para apoiar decisões e o crescimento da empresa.",
+          code: "OCT015",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/BPO-Cont%C3%A1bil-e-Tribut%C3%A1rio-%E2%80%93-Ind%C3%BAstria-e-Com%C3%A9rcio.aspx",
+          priority: "Alta",
+          area: "Contabilidade"
+        },
+        {
+          name: "BPO Trabalhista e Previdenciário",
+          description: " É um serviço completo de terceirização da gestão trabalhista e previdenciária, garantindo que a empresa cumpra todas as obrigações legais e otimize sua gestão de folha de pagamento, benefícios e rotinas de recursos humanos. O serviço é adaptado para empresas de todos os portes e setores, garantindo conformidade e eficiência.",
+          code: "OCT013",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/BPO-Trabalhista-e-Previdenci%C3%A1rio.aspx",
+          priority: "Alta",
+          area: "Contabilidade"
+        },
+
+        {
+          name: "BPO Trabalhista e Previdenciário – Por Vida",
+          description: "Cuida de toda a parte trabalhista e previdenciária de colaboradores contratados pela empresa, de forma individualizada. Inclui registros, folha de pagamento, encargos, envio de obrigações legais (eSocial, DCTFWeb, DIRF) e suporte técnico com base na legislação vigente. Evita erros, reduz riscos de multas e permite que o cliente não precise se envolver nas rotinas burocráticas, mantendo o foco total no seu negócio.",
+          code: "OCT013-01",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/BPO-Trabalhista-e-Previdenci%C3%A1rio-%E2%80%93-Por-Vida.aspx",
+          priority: "Média",
+          area: "Contabilidade"
+
+        },
+
+        {
+          name: "Regularização de Obra",
+          description: "Realiza todo o processo de regularização da obra junto aos órgãos competentes, incluindo abertura do CNO, apuração de encargos, envio das obrigações legais, regularização no SERO e emissão da certidão negativa para averbação do imóvel. Garante que a obra esteja em conformidade com a legislação, evitando autuações, atrasos no registro e prejuízos com encargos apurados de forma incorreta.",
+          code: "OCT006-01",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/Regulariza%C3%A7%C3%A3o-de-Obra.aspx",
+          priority: "Média",
+          area: "Contabilidade"
+        },
+
+        {
+          name: "Obrigação Acessória e-Social Processo Trabalhista",
+          description: "Realiza o registro do processo trabalhista no e-Social, com lançamento dos valores devidos, envio das informações, transmissão da DCTFWeb e emissão da guia de recolhimento. Garante o cumprimento da exigência legal com apuração correta dos encargos e documentação adequada para apresentação à Justiça do Trabalho, evitando riscos e pendências com o Fisco.",
+          code: "OCT018",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/Obriga%C3%A7%C3%A3o-Acess%C3%B3ria-e-Social-Processo-Trabalhista.aspx",
+          priority: "Média",
+          area: "Contabilidade"
+        },
+
+        {
+          name: "Consultoria e Assessoria Contábil / Tributária",
+          description: "Auxilia a empresa na organização dos processos contábeis e fiscais, com mapeamento de rotinas, orientação da equipe, definição de agendas de fechamento e apoio na apuração de tributos e entrega de obrigações acessórias. Garante que os procedimentos estejam alinhados à legislação, melhora o controle interno e contribui para decisões mais seguras, com foco em crescimento, redução de riscos e continuidade operacional.",
+          code: "OCT011",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/Consultoria-e-Assessoria-Cont%C3%A1bil---Tribut%C3%A1ria.aspx",
+          priority: "Média",  
+          area: "Contabilidade"
+        },
+
+        {
+          name: "Parametrização Contábil/Tributária – Sistema Operacional",
+          description: "Configura corretamente o sistema de gestão da empresa para refletir as regras contábeis e tributárias, garantindo que todos os lançamentos, cálculos e classificações sejam feitos de forma automatizada, segura e em conformidade com a legislação. Reduz o tempo da equipe com retrabalho, evita erros fiscais, melhora a qualidade das informações e agiliza os processos internos, contribuindo para uma gestão mais eficiente e estratégica.",
+          code: "OCT019",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/Parametriza%C3%A7%C3%A3o-Cont%C3%A1bil-Tribut%C3%A1ria-%E2%80%93-Sistema-Operacional.aspx",
+          priority: "Média",
+          area: "Contabilidade"
+        },
+
+        {
+          name: " IRPF – Anual",
+          description: "Realiza o preenchimento, revisão e entrega da declaração do Imposto de Renda Pessoa Física (IRPF), com acompanhamento de todas as fichas e consultoria patrimonial. Garante o cumprimento da obrigação legal, evita multas e bloqueios no CPF, e assegura que os dados estejam corretos e otimizados para reduzir riscos fiscais e apoiar o planejamento financeiro do contribuinte.",
+          code: "OCT009-01",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/IRPF-%E2%80%93-Anual.aspx",
+          priority: "Alta",
+          area: "Contabilidade"
+        },
+
+        {
+          name: "IRPF – Mensal",
+          description: "Realiza o lançamento mensal de receitas e despesas no livro-caixa do contribuinte (Carnê-Leão, atividade rural, renda variável), com acompanhamento patrimonial contínuo. Garante o cumprimento das obrigações mensais exigidas pela Receita Federal, evita multas e bloqueios no CPF e permite identificar oportunidades de economia tributária com antecedência, apoiando o planejamento financeiro e patrimonial.",
+          code: "OCT009-02",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/IRPF-%E2%80%93-Mensal.aspx",
+          priority: "Alta",
+          area: "Contabilidade"
+        },
+
+        
+        {
+          name: "Planejamento Tributário – Executado pela Contabilidade (Clientes Base)",
+          description: "Analisa se a empresa está no regime fiscal mais vantajoso, com foco na redução da carga tributária e na utilização correta de benefícios fiscais federais e estaduais. A análise considera a atividade da empresa, a tributação dos produtos (por NCM), os estados de atuação, a viabilidade de filiais e o compliance tributário. Em situações específicas — como clientes já atendidos pela Contabilidade e diante da indisponibilidade técnica da equipe de Gestão Tributária — a execução poderá ser realizada pela área contábil, mantendo o padrão técnico e os objetivos estratégicos do serviço.",
+          code: "OCT020",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/Planejamento-Tribut%C3%A1rio-%E2%80%93-Executado-pela-Contabilidade-(Clientes-Base).aspx",
+          priority: "Alta",
+          area: "Contabilidade"
+        },
+
+        {
+          name: "Revisão de Grade – Executado pela Contabilidade (Clientes Base)",
+          description: "A Revisão de Grade Tributária é um serviço especializado que garante que sua empresa aplique corretamente a tributação sobre seus produtos e serviços, assegurando conformidade legal e identificando oportunidades de economia fiscal. Este serviço é realizado exclusivamente pela equipe contábil para clientes internos já atendidos pela Contabilidade, ou em situações em que a Gestão Tributária não tenha disponibilidade técnica para atender a demanda. Dessa forma, garantimos que mesmo os clientes da Contabilidade tenham acesso à revisão técnica da grade tributária, mantendo o padrão de qualidade da análise.",
+          code: "OCT021",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/Revis%C3%A3o-de-Grade-%E2%80%93-Executado-pela-Contabilidade-(Clientes-Base).aspx",
+          priority: "Baixa",
+          area: "Contabilidade"
+        },
+
+        {
+          name: "Análise e Acompanhamento de Parcelamentos Federais, Estaduais e Municipais",
+          description: "Identifica oportunidades para regularização de débitos tributários junto aos órgãos federais, estaduais e municipais, avaliando condições de parcelamento e possíveis reduções de multas e juros. Realiza a adesão aos programas disponíveis e acompanha a manutenção dos parcelamentos, garantindo a conformidade fiscal da empresa, a continuidade das operações e a redução de riscos financeiros.",
+          code: "OCT022",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/An%C3%A1lise-e-Acompanhamento-de-Parcelamentos-Federais,-Estaduais-e-Municipais.aspx",
+          priority: "Média",
+          area: "Contabilidade"
+        },
+
+        {
+          name: "Assessoria para Filiais",
+          description: "Oferece suporte contábil, fiscal e operacional para a abertura, estruturação e rotina das filiais da empresa, garantindo que todas as obrigações sejam cumpridas conforme a legislação local. Auxilia na padronização de processos, apuração correta de tributos e integração das informações com a matriz, assegurando controle, conformidade e eficiência na expansão das operações.",
+          code: "OCT001",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/Assessoria-para-Filiais.aspx",
+          priority: "Média",
+          area: "Contabilidade"
+        },
+
+
+        {
+          name: "Constituição e Regularização de Empresas",
+          description: "Realiza todo o processo de abertura e legalização de empresas, incluindo cadastro no CNPJ, registro na Junta Comercial, obtenção de inscrições fiscais e alvarás, além da regularização de pendências cadastrais e fiscais. Garante que a empresa esteja formalizada e pronta para operar com segurança jurídica, evitando riscos legais e facilitando o acesso a benefícios fiscais e crédito.",
+          code: "OCT006",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/Constitui%C3%A7%C3%A3o-e-Regulariza%C3%A7%C3%A3o-de-Empresas.aspx",
+          priority: "Média",
+          area: "Contabilidade"
+        },
+
+        {
+          name: "Recomposição Contábil e Tributária",
+          description: "Regulariza e atualiza registros contábeis e fiscais de períodos anteriores, corrigindo inconsistências, refazendo lançamentos e entregando obrigações acessórias em atraso. Garante que a empresa volte à conformidade legal, evita multas e autuações, e assegura a integridade das informações para tomadas de decisão e auditorias futuras.",
+          code: "OCT017",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/Recomposi%C3%A7%C3%A3o-Cont%C3%A1bil-e-Tribut%C3%A1ria.aspx",
+          priority: "Média",
+          area: "Contabilidade"
+        },
+
+        {
+          name: "IRPF / ITR",
+          description: "Realiza o preenchimento, revisão e entrega da declaração de Imposto de Renda Pessoa Física (IRPF) e do Imposto Territorial Rural (ITR), garantindo o cumprimento das obrigações legais, a correta apuração dos tributos e a regularidade do CPF e do imóvel rural. Evita multas, bloqueios e inconsistências, assegurando tranquilidade fiscal e suporte ao planejamento patrimonial.",
+          code: "OCT009",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/IRPF---ITR.aspx",
+          priority: "Média",
+          area: "Contabilidade"
+        },
+
+        {
+          name: "BPO Contábil e Tributário – Serviços",
+          description: "Cuida de toda a rotina contábil e fiscal da empresa prestadora de serviços, com registros das movimentações, elaboração de demonstrativos financeiros, entrega das obrigações exigidas pelo Fisco (ECD, ECF, DCTF etc.) e reuniões de acompanhamento. Garante que a empresa atenda às exigências legais, evite riscos com tributos mal calculados e tenha informações confiáveis para apoiar decisões e crescimento com segurança.",
+          code: "OCT016",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/BPO-Cont%C3%A1bil-e-Tribut%C3%A1rio-%E2%80%93-Servi%C3%A7os.aspx",
+          priority: "Alta",
+          area: "Contabilidade"
+        },
+
+
+        {
+          name: "Implantação Contábil Tributário (CT)",
+          description: "Etapa inicial antes do início da contabilidade recorrente, realizada para alinhar processos, escopo, obrigações e estrutura fiscal e contábil do cliente. Inclui o mapeamento da operação atual, análise da contabilidade anterior, revisão de cadastros, parametrização do sistema e definição dos fluxos de trabalho. Garante uma transição segura, reduz riscos operacionais e assegura que a contabilidade comece estruturada e alinhada com as necessidades do negócio.",
+          code: "OCT026",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/Implanta%C3%A7%C3%A3o-Cont%C3%A1bil-Tribut%C3%A1rio-(CT).aspx",
+          priority: "Média",
+          area: "Contabilidade"
+        },
+
+        {
+          name: "Implantação Trabalhista/Previdenciária (TP)",
+          description: "Etapa preparatória antes do início da rotina trabalhista e previdenciária, voltada à organização e estruturação das informações dos colaboradores e obrigações legais. Envolve o levantamento e validação de dados da folha anterior, parametrização do sistema, revisão de eventos no eSocial e definição dos fluxos de admissão, férias, rescisões e encargos. Garante uma transição segura, evitando inconsistências e assegurando o correto cumprimento das obrigações desde o primeiro mês",
+          code: "OCT027",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/Implanta%C3%A7%C3%A3o-Trabalhista-Previdenci%C3%A1ria-(TP).aspx",
+          priority: "Média",
+          area: "Contabilidade"
+        },
+
+        
+        {
+          name: "Pedido de Regime Especial",
+          description: "Realiza o levantamento de documentos, elaboração de cálculos e protocolo do pedido de Regime Especial de tributação junto ao Fisco. Inclui o acompanhamento do processo até a decisão final do órgão competente, garantindo o cumprimento das exigências formais. Não contempla análise estratégica da viabilidade nem defesa técnica do pleito.",
+          code: "OCT025",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20CONT/Pedido-de-Regime-Especial.aspx",
+          priority: "Média",
+          area: "Contabilidade"
+        },
+
+         {
+          name: "Compliance Tributário",
+          description: "Garante que os processos e obrigações tributárias da empresa estejam em conformidade com a legislação, evitando riscos, corrigindo falhas e identificando oportunidades, com reflexos diretos na contabilidade e na segurança fiscal.",
+          code: "TAX001",
+           url: "https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Compliance-Tribut%C3%A1rio.aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+        {
+          name: "Planejamento Tributário",
+          description: "Analisa a situação fiscal da empresa para estruturar estratégias que reduzam a carga tributária de forma legal, aproveitando incentivos e evitando riscos, com impacto direto na lucratividade e na conformidade.",
+          code: "TAX002",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Planejamento-Tribut%C3%A1rio.aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+        {
+          name: "Assessoria Tributária (Dúvidas e Direcionamentos)",
+          description: "Atende dúvidas fiscais da empresa e orienta sobre o melhor caminho a seguir em temas tributários, garantindo decisões seguras, alinhadas à legislação e com foco em evitar riscos e aproveitar oportunidades.",
+          code: "TAX003",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Assessoria%20Tribut%C3%A1ria%20(D%C3%BAvidas%20e%20Direcionamentos).aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Incentivos, Benefícios e Estratégias Fiscais",
+          description: "Mapeia e aplica incentivos fiscais como ICMS, ISS, IPI e PIS/COFINS, além de regimes especiais e benefícios regionais, conforme o perfil da empresa. Acompanha mudanças na legislação e apoia uma estrutura tributária estratégica e eficiente.",
+          code: "TAX004",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Incentivos,-Benef%C3%ADcios-e-Estrat%C3%A9gias-Fiscais.aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Recuperação de Tributos - PIS / COFINS (Revisão de Insumos, Exclusão do ICMS e Gross Up)",
+          description: "Revisa os insumos e calcula corretamente os créditos de PIS e COFINS, aplicando teses como a exclusão do ICMS da base e o Gross Up, para recuperar valores pagos a mais e melhorar a eficiência tributária da empresa.",
+          code: "TAX005",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Recupera%C3%A7%C3%A3o-de-Tributos---PIS---COFINS-(Revis%C3%A3o-de-Insumos,-Exclus%C3%A3o-do-ICMS-e-Gross-Up).aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Auditoria de Obrigações Acessórias",
+          description: "Revisa e valida as informações enviadas ao Fisco (SPEDs, DCTF, EFD, entre outros) para identificar erros, omissões ou riscos, garantindo que as obrigações acessórias estejam corretas e a empresa em conformidade com a legislação.",
+          code: "TAX006",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Auditoria-de-Obriga%C3%A7%C3%B5es-Acess%C3%B3rias.aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Assessoria em Notificações e Intimações Administrativas",
+          description: "Analisa e responde notificações e intimações fiscais recebidas pela empresa, orientando sobre os riscos e os passos corretos para regularização, com foco em evitar autuações e garantir segurança jurídica.",
+          code: "TAX007",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Assessoria-em-Notifica%C3%A7%C3%B5es-e-Intima%C3%A7%C3%B5es-Administrativas.aspx",
+          priority: "Baixa",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Revisão de Grade Tributária",
+          description: "Analisa e revisa a tributação aplicada aos produtos e serviços (NCM, CST, CFOP, alíquotas), corrigindo erros que podem gerar pagamento indevido de tributos ou risco de autuação, com foco em conformidade e economia fiscal.",
+          code: "TAX008",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Revis%C3%A3o-de-Grade-Tribut%C3%A1ria.aspx",
+          priority: "Baixa",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Subvenções para Investimento ",
+          description: "Identifica e aplica benefícios fiscais de subvenção para investimentos, permitindo que a empresa reduza tributos como IRPJ e CSLL de forma legal, ao comprovar o uso dos recursos em expansão ou modernização.",
+          code: "TAX009",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Subven%C3%A7%C3%B5es-para-Investimento.aspx",
+          priority: "Baixa",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Subvenções para Investimento  - Importação",
+          description: "Aplica benefícios fiscais de subvenção para investimentos vinculados à importação, reduzindo tributos como IRPJ e CSLL ao comprovar que os recursos foram usados para expansão, modernização ou inovação da empresa.",
+          code: "TAX009-01",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Subven%C3%A7%C3%B5es-para-Investimento---Importa%C3%A7%C3%A3o.aspx",
+          priority: "Alta",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Suspensão e Imunidade de PIS/COFINS nos Fretes com Mercadorias Destinadas à Exportação",
+          description: "Aplica a suspensão ou imunidade de PIS/COFINS sobre os fretes vinculados a mercadorias destinadas à exportação, garantindo economia tributária e conformidade com a legislação vigente.",
+          code: "TAX010",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Suspens%C3%A3o-e-Imunidade-de-PIS-COFINS-nos-Fretes-com-Mercadorias-Destinadas-%C3%A0-Exporta%C3%A7%C3%A3o.aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Compensação Cruzada Tributos Federais",
+          description: "Permite utilizar créditos de tributos federais para quitar outros tributos ou débitos inscritos, mesmo que sejam de naturezas diferentes, gerando economia, regularidade fiscal e melhor gestão do caixa da empresa.",
+          code: "TAX011",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Compensa%C3%A7%C3%A3o-Cruzada-Tributos-Federais.aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Análise e Revisão de Atividade Preponderante para Desoneração da Folha",
+          description: "Analisa e revisa a atividade principal da empresa para verificar se ela pode se enquadrar na desoneração da folha de pagamento, reduzindo encargos sobre a folha e gerando economia com base na legislação vigente.",
+          code: "TAX012",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/An%C3%A1lise-e-Revis%C3%A3o-de-Atividade-Preponderante-para-Desonera%C3%A7%C3%A3o-da-Folha.aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Recuperação de PIS/COFINS-ST sobre Venda de Cigarros",
+          description: "Recupera valores de PIS/COFINS-ST pagos a mais na venda de cigarros, com base em decisões judiciais e interpretação da legislação, gerando créditos tributários e alívio no caixa da empresa.",
+          code: "TAX013",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Recupera%C3%A7%C3%A3o-de-PIS-COFINS-ST-sobre-Venda-de-Cigarros.aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+
+
+        {
+          name: "Exclusão do ICMS da Base de Cálculo do PIS e da COFINS",
+          description: "Aplica o direito reconhecido pelo STF que exclui o ICMS da base de cálculo do PIS e da COFINS, permitindo a recuperação de valores pagos a mais e a redução dos tributos de forma legal e segura.",
+          code: "TAX014",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Exclus%C3%A3odoICMSdaBasedeC%C3%A1lculodoPISedaCOFINS.aspx",
+          priority: "Alta",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Habilitação, Compensação e Acompanhamento de Créditos de Ações Judiciais",
+          description: "Faz a habilitação e compensação de créditos obtidos em ações judiciais tributárias, além de acompanhar todo o processo até o uso efetivo dos valores, garantindo conformidade e aproveitamento seguro dos créditos.",
+          code: "TAX015",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Habilita%C3%A7%C3%A3o,-Compensa%C3%A7%C3%A3o-e-Acompanhamento-de-Cr%C3%A9ditos-de-A%C3%A7%C3%B5es-Judiciais.aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Recuperação de créditos de ICMS",
+          description: "Identifica e recupera créditos de ICMS pagos a mais ou não aproveitados pela empresa, corrigindo erros e garantindo o uso correto desses valores para reduzir o custo tributário de forma legal e eficiente.",
+          code: "TAX016",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Recupera%C3%A7%C3%A3o-de-cr%C3%A9ditos-de-ICMS.aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Recuperação de créditos de ICMS - 20% Crédito Presumido",
+          description: "Aplica o benefício fiscal que permite a recuperação de 20% de crédito presumido de ICMS sobre determinadas operações, reduzindo a carga tributária e gerando economia para a empresa de forma legal e segura.",
+          code: "TAX016-01",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Recupera%C3%A7%C3%A3o-de-cr%C3%A9ditos-de-ICMS---20--Cr%C3%A9dito-Presumido.aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+
+
+        {
+          name: "Recuperação de Tributos - IRPJ / CSLL",
+          description: "Revisa e identifica créditos de IRPJ e CSLL não aproveitados em situações específicas, relacionadas a subvenções. Aplicação pontual, voltada à recuperação de valores pagos indevidamente.",
+          code: "TAX017",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Recupera%C3%A7%C3%A3o-de-Tributos---IRPJ---CSLL.aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Habilitação, transferência e utilização de créditos de ICMS",
+          description: "Realiza a habilitação, transferência e uso de créditos de ICMS acumulados ou oriundos de benefícios fiscais, garantindo que a empresa aproveite esses valores de forma legal, estratégica e eficiente.",
+          code: "TAX018",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Habilita%C3%A7%C3%A3o,-transfer%C3%AAncia-e-utiliza%C3%A7%C3%A3o-de-cr%C3%A9ditos-de-ICMS.aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+
+        
+        {
+          name: "Recuperação de Tributos - ICMS/ST (ADRC-ST, MVA superior)",
+          description: "Recupera valores de ICMS/ST pagos a mais devido à aplicação de MVA superior à praticada ou erros identificados via ADRC-ST, garantindo o ressarcimento legal e a redução do custo tributário.",
+          code: "TAX020",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Recupera%C3%A7%C3%A3o-de-Tributos---ICMS-ST-(ADRC-ST,-MVA-superior).aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Restituição de PIS/COFINS Monofásico",
+          description: "Analisa e recupera créditos de PIS e COFINS pagos indevidamente na venda de produtos monofásicos (como combustíveis, bebidas e medicamentos), cuja tributação já foi recolhida na indústria, evitando cobrança em duplicidade.",
+          code: "TAX021",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Restitui%C3%A7%C3%A3o-de-PIS-COFINS-Monof%C3%A1sico.aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Exclusão do ICMS DIFAL da base de cálculo do PIS e da COFINS",
+          description: "Apura e recupera valores de PIS e COFINS pagos indevidamente sobre o ICMS-DIFAL, com base no entendimento de que esse valor não integra o faturamento e não deve compor a base das contribuições.",
+          code: "TAX022",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Exclus%C3%A3o-do-ICMS-DIFAL-da-base-de-c%C3%A1lculo-do-PIS-e-da-COFINS.aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Imunidade na CPRB/Desoneração da Folha de Pagamento",
+          description: "Aplica a imunidade da CPRB (Contribuição Previdenciária sobre Receita Bruta) para entidades e atividades amparadas legalmente, garantindo economia com encargos sobre a folha e conformidade com a legislação.",
+          code: "TAX023",
+          url: "https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Imunidade-na-CPRB-Desonera%C3%A7%C3%A3o-da-Folha-de-Pagamento.aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Exclusão do Crédito Presumido de ICMS do IRPJ/CSLL - Pacto Federativo",
+          description: "Reduz a base de cálculo do IRPJ e da CSLL por meio da exclusão de benefícios fiscais de ICMS concedidos pelos estados, conforme o pacto federativo e decisões do STF, gerando economia tributária legal.",
+          code: "TAX024",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Exclus%C3%A3o-do-Cr%C3%A9dito-Presumido-de-ICMS-do-IRPJ-CSLL---Pacto-Federativo.aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Lei do Bem - Benefício Fiscal IRPJ CSLL",
+          description: "Aplica o benefício fiscal da Lei do Bem, que permite deduzir do IRPJ e da CSLL os investimentos em pesquisa, desenvolvimento e inovação, incentivando a inovação tecnológica e gerando economia tributária.",
+          code: "TAX025",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Lei-do-Bem---Benef%C3%ADcio-Fiscal-IRPJ-CSLL.aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Recuperação do Crédito de IPI não Recuperável no PIS e COFINS",
+          description: "Recupera valores de IPI não aproveitados como crédito, permitindo sua compensação no PIS e na COFINS, com base em interpretação legal e jurisprudencial, gerando economia e corrigindo distorções fiscais.",
+          code: "TAX026",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Recupera%C3%A7%C3%A3o-do-Cr%C3%A9dito-de-IPI-n%C3%A3o-Recuper%C3%A1vel-no-PIS-e-COFINS.aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Imunidade de PIS COFINS em operações para Zona Franca de Manaus e Áreas de Livre Comércio",
+          description: "Aplica a imunidade de PIS e COFINS em vendas destinadas à Zona Franca de Manaus e Áreas de Livre Comércio, garantindo isenção legal dos tributos e aumento da competitividade nas operações com esses destinos.",
+          code: "TAX027",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Imunidade-de-PIS-COFINS-em-opera%C3%A7%C3%B5es-para-Zona-Franca-de-Manaus-e-%C3%81reas-de-Livre-Com%C3%A9rcio.aspx",
+          priority: "Alta",
+          area: "Gestão Tributária"
+        },
+
+        {
+          name: "Consultoria e Assessoria no Requerimento de Depreciação Acelerada",
+          description: "Orienta e executa o processo de requerimento da depreciação acelerada de ativos, permitindo que a empresa antecipe deduções no IRPJ e na CSLL, com base em benefícios legais, reduzindo a carga tributária.",
+          code: "TAX028",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Consultoria-e-Assessoria-no-Requerimento-de-Deprecia%C3%A7%C3%A3o-Acelerada.aspx",
+          priority: "Média",
+          area: "Gestão Tributária"
+        },
+
+        
+        {
+          name: "Exclusão do ICMS ST da base de cálculo de PIS e COFINS",
+          description: "Aplica a exclusão do ICMS-ST da base de cálculo do PIS e da COFINS, permitindo a recuperação de valores pagos a mais e a redução legal da carga tributária nas operações sujeitas à substituição tributária.",
+          code: "TAX029",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20GT/Exclus%C3%A3o-do-ICMS-ST-da-base-de-c%C3%A1lculo-de-PIS-e-COFINS.aspx",
+          priority: "Alta",
+          area: "Gestão Tributária"
+        },
+
+          {
+          name: "Intermediação em Aplicação – CDBs",
+          description: "É um serviço de assessoria que conecta o cliente a instituições financeiras parceiras para aplicar em CDBs. A Funcional seleciona as melhores opções de investimento, cuida de todo o processo e garante praticidade, segurança e rentabilidade acima do CDI.",
+          code: "INV001",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Intermedia%C3%A7%C3%A3o-em-Aplica%C3%A7%C3%A3o-%E2%80%93-CDBs.aspx",
+          priority: "Média",
+          area: "Investimentos"
+        },
+        {
+          name: "Intermediação em Aplicação - Tesouro Direto",
+          description: "É um serviço de assessoria e intermediação para aplicação no Tesouro Direto, com orientação estratégica e acompanhamento das oportunidades de compra e venda dos títulos públicos federais, garantindo segurança, alinhamento ao perfil do cliente e boa rentabilidade.",
+          code: "INV002",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Intermedia%C3%A7%C3%A3o-em-Aplica%C3%A7%C3%A3o---Tesouro-Direto.aspx", 
+          priority: "Média",
+          area: "Investimentos"
+        },
+        {
+          name: "Estruturação de Operação – LC / LCI / LCA",
+          description: "É um serviço de estruturação financeira para aplicação em LC, LCI e LCA, com intermediação junto a instituições parceiras. A Funcional garante melhor rentabilidade, isenção fiscal para pessoa física e liquidez conforme o perfil e objetivo do cliente.",
+          code: "INV003",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Estrutura%C3%A7%C3%A3o-de-Opera%C3%A7%C3%A3o-%E2%80%93-LC---LCI---LCA.aspx",
+          priority: "Média",
+          area: "Investimentos"
+        },
+        {
+          name: "Estruturação de Operação – CRI",
+          description: "É um serviço de estruturação financeira para captação de recursos via emissão de CRI, com lastro em recebíveis imobiliários. A Funcional cuida da modelagem da operação, definição das garantias e intermediação com investidores qualificados e instituições financeiras.",
+          code: "INV004",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Estrutura%C3%A7%C3%A3o-de-Opera%C3%A7%C3%A3o-%E2%80%93-CRI.aspx",
+          priority: "Média",
+          area: "Investimentos"
+        },
+
+        {
+          name: "Estruturação de Operação - CRA",
+          description: "É um serviço de estruturação financeira para captação de recursos via emissão de CRA, com lastro em recebíveis do agronegócio. A Funcional atua na modelagem da operação, definição das garantias e intermediação com securitizadoras e investidores qualificados.",
+          code: "INV005",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Estrutura%C3%A7%C3%A3o-de-Opera%C3%A7%C3%A3o---CRA.aspx",
+          priority: "Média",
+          area: "Investimentos"
+        },
+
+        {
+          name: "Assessoria na Emissão/Compra de Debêntures",
+          description: "É um serviço completo de estruturação de operações com debêntures. A Funcional realiza a análise da empresa ou projeto, modelagem financeira, definição de garantias, negociação com investidores e acompanhamento da emissão junto à securitizadora ou instituição financeira.",
+          code: "INV006",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Assessoria-na-Emiss%C3%A3o-Compra-de-Deb%C3%AAntures.aspx",
+          priority: "Alta",
+          area: "Investimentos"
+        },
+
+        {
+          name: "Assessoria na Alocação - Fundos de Renda Fixa",
+          description: "É um serviço de assessoria para alocação em fundos de renda fixa. A Funcional analisa o perfil do investidor, indica os fundos mais adequados, acompanha o desempenho da carteira e orienta aportes, resgates ou ajustes conforme o cenário econômico e os objetivos do cliente.",
+          code: "INV007",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Assessoria-na-Aloca%C3%A7%C3%A3o---Fundos-de-Renda-Fixa.aspx",
+          priority: "Alta",
+          area: "Investimentos"
+        },
+
+        {
+          name: "Assessoria na Alocação - Fundos Multimercados",
+          description: "É um serviço de assessoria para diversificação de investimentos em fundos multimercados. A Funcional avalia o perfil do investidor, indica os fundos mais alinhados aos objetivos, acompanha a performance da carteira e orienta realocações com base no cenário econômico.",
+          code: "INV008",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Assessoria-na-Aloca%C3%A7%C3%A3o---Fundos-Multimercados.aspx",
+          priority: "Alta",
+          area: "Investimentos"
+        },
+
+        {
+          name: "Assessoria na Alocação - Fundos de Ações",
+          description: "Realizamos a análise do perfil do investidor e dos objetivos financeiros para indicar os fundos de ações mais alinhados à estratégia de longo prazo do cliente. Acompanhamos o desempenho da carteira, sugerindo ajustes e novas alocações conforme o cenário de mercado e a performance dos fundos.",
+          code: "INV009",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Assessoria-na-Aloca%C3%A7%C3%A3o---Fundos-de-A%C3%A7%C3%B5es.aspx",
+          priority: "Média",
+          area: "Investimentos"
+        },
+
+        {
+          name: "Assessoria na Alocação - Fundos Internacionais",
+          description: "É um serviço que ajuda o cliente a investir em fundos fora do Brasil. A Funcional indica os melhores fundos de acordo com o perfil e objetivos do cliente, acompanha os resultados e orienta ajustes, protegendo o patrimônio com investimentos em moedas e mercados internacionais, considerando cenário econômico internacional e variação cambial.",
+          code: "INV010",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Assessoria-na-Aloc%C3%A7%C3%A3o---Fundos-Internacionais.aspx",
+          priority: "Média",
+          area: "Investimentos"
+        },
+
+        {
+          name: "Assessoria na Compra de Ações",
+          description: "É um serviço de assessoria para quem quer investir diretamente em ações na Bolsa. A Funcional analisa o perfil do cliente, indica os melhores momentos para comprar ou vender, monta a estratégia e acompanha o mercado junto com o investidor, com segurança e clareza.",
+          code: "INV011",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Assessoria-na-Compra-de-A%C3%A7%C3%B5es.aspx",
+          priority: "Média",
+          area: "Investimentos"
+        },
+
+        
+        {
+          name: "Estruturação e Operação - Derivativos",
+          description: "É um serviço que protege o caixa da empresa contra variações de preço, dólar, juros ou commodities. A Funcional monta a estratégia com contratos como futuros e opções, acompanha o mercado e ajusta a operação para garantir segurança ou potencial de ganho com alavancagem.",
+          code: "INV012",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Estrutura%C3%A7%C3%A3o-e-Opera%C3%A7%C3%A3o---Derivativos.aspx",
+          priority: "Média",
+          area: "Investimentos"
+        },
+
+        {
+          name: "Operação Estruturada - Commodities",
+          description: "É um serviço que ajuda empresas a se protegerem das variações no preço de produtos como soja, milho, café e petróleo. A Funcional monta uma estratégia com apoio de bancos e corretoras para evitar prejuízos com a oscilação do mercado ou até aproveitar para lucrar mais quando o cenário estiver favorável.",
+          code: "INV013",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Opera%C3%A7%C3%A3o-Estruturada---Commodities.aspx",
+          priority: "Média",
+          area: "Investimentos"
+        },
+
+
+        {
+          name: "Estruturação de Envio de Recursos ao Exterior",
+          description: "É um serviço que organiza e acompanha todo o processo para enviar dinheiro legalmente para fora do Brasil. A Funcional cuida da operação com os bancos e corretoras, garantindo segurança, rapidez e que tudo esteja de acordo com as regras do Banco Central.",
+          code: "INV014",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Estrutura%C3%A7%C3%A3o-de-Envio-de-Recursos-ao-Exterior.aspx",
+          priority: "Média",
+          area: "Investimentos"
+        },
+
+        {
+          name: "Parceria Internacional - Atendimento Personalizado",
+          description: "É um serviço que ajuda o cliente a investir ou proteger seu patrimônio fora do Brasil. A Funcional entende o que o cliente precisa, conecta com bancos ou gestoras internacionais confiáveis e acompanha todo o processo com segurança e apoio técnico.",
+          code: "INV015",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Parceria-Internacional---Atendimento-Personalizado.aspx",
+          priority: "Média",
+          area: "Investimentos"
+          
+        },
+
+        {
+          name: "Consultoria e Intermediação - Previdência Privada (PGBL / VGBL)",
+          description: "É um serviço que ajuda o cliente a escolher o plano de previdência ideal para aposentadoria ou sucessão. A Funcional orienta entre PGBL e VGBL, explica os benefícios fiscais, cuida da contratação com a seguradora e acompanha a aplicação ao longo do tempo.",
+          code: "INV016",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Consultoria-e-Intermedia%C3%A7%C3%A3o---Previd%C3%AAncia-Privada-(PGBL---VGBL).aspx",
+          priority: "Média",
+          area: "Investimentos"
+        },
+
+        {
+          name: "Intermediação - Câmbio Comercial / Turismo",
+          description: "É um serviço que ajuda pessoas e empresas a comprar ou vender moeda estrangeira com segurança. A Funcional negocia com bancos parceiros, cuida da operação de câmbio e garante que tudo seja feito corretamente e com boas condições.",
+          code: "INV017",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Intermedia%C3%A7%C3%A3o---C%C3%A2mbio-Comercial---Turismo.aspx",
+          priority: "Média",
+          area: "Investimentos"
+        },
+
+        {
+          name: "Proteção Patrimonial Internacional via Offshore",
+          description: "É um serviço que ajuda o cliente a mandar dinheiro para fora do Brasil de forma legal, criando uma empresa no exterior (offshore) para proteger e guardar parte do seu patrimônio com mais segurança, sigilo e liberdade.",
+          code: "INV018",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Prote%C3%A7%C3%A3o-Patrimonial-Internacional-via-Offshore.aspx",
+          priority: "Média",
+          area: "Investimentos"
+        },
+
+        {
+          name: "Intermediação - Financiamento de Veículos",
+          description: "É um serviço que conecta o cliente a bancos parceiros para financiar veículos novos, usados, vans e veículos de médio porte. A Funcional acompanha a proposta, análise de crédito e negociação das condições. O financiamento pode ser personalizado com carência, pagamento apenas de juros mensais e parcelas maiores em datas combinadas (balões), adaptadas ao fluxo de caixa do cliente, como produtores rurais e empresários.",
+          code: "INV019",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Intermedia%C3%A7%C3%A3o---Financiamento-de-Ve%C3%ADculos.aspx",
+          priority: "Média",
+          area: "Investimentos"
+        },
+
+        {
+          name: "Intermediação - Financiamento Imobiliário",
+          description: "É um serviço que ajuda o cliente a financiar imóveis residenciais ou comerciais por meio de bancos parceiros (exceto Safra). A Funcional cuida de tudo: analisa o crédito, verifica se a operação se encaixa nas regras do banco, negocia as melhores condições de pagamento e acompanha o processo até a liberação do dinheiro.",
+          code: "INV020",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Intermedia%C3%A7%C3%A3o---Financiamento-Imobili%C3%A1rio.aspx",
+          priority: "Média",
+          area: "Investimentos"
+        },
+
+
+        {
+          name: "Estruturação de Operação - Capital de Giro PJ",
+          description: "É um serviço que ajuda empresas a conseguirem dinheiro para reforçar o caixa e manter as operações funcionando. A Funcional analisa quanto a empresa precisa, monta a melhor forma de conseguir o crédito com bancos ou investidores, negocia taxas e prazos, e acompanha até o dinheiro cair na conta.",
+          code: "INV021",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Estrutura%C3%A7%C3%A3o-de-Opera%C3%A7%C3%A3o---Capital-de-Giro-PJ.aspx",
+          priority: "Média",
+          area: "Investimentos"
+        },
+
+        {
+          name: "Estruturação de Crédito via Securitizadora",
+          description: "É um serviço que ajuda empresas a conseguir crédito fora do banco, usando recebíveis ou outros bens como garantia. A Funcional analisa o perfil da empresa, monta a melhor estratégia, negocia com investidores e acompanha tudo até o dinheiro ser liberado.",
+          code: "INV022",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Estrutura%C3%A7%C3%A3o-de-Cr%C3%A9dito-via-Securitizadora1.aspx",
+          priority: "Média",
+          area: "Investimentos"
+        },
+
+
+        {
+          name: "Assessoria em Crédito Agro",
+          description: "É um serviço que ajuda produtores rurais e empresas do agro a conseguir crédito com boas condições. A Funcional analisa quanto o cliente precisa, quais garantias ele pode oferecer, monta a proposta, negocia com os bancos e acompanha tudo até o dinheiro ser liberado.",
+          code: "INV023",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Assessoria-em-Cr%C3%A9dito-Agro.aspx",
+          priority: "Alta",
+          area: "Investimentos"
+        },
+
+        
+        {
+          name: "Seguro de Vida e em Vida – Proteção Patrimonial",
+          description: "É um serviço que ajuda o cliente a contratar um seguro que protege tanto em vida (casos como doença grave ou invalidez) quanto depois, garantindo que os bens fiquem para os beneficiários sem precisar de inventário. A Funcional orienta tudo com foco em segurança e planejamento.",
+          code: "INV024",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INV/Seguro-de-Vida-e-em-Vida-%E2%80%93-Prote%C3%A7%C3%A3o-Patrimonial.aspx",
+          priority: "Média",
+          area: "Investimentos"
+        },
+        {
+          name: "Antecipação de Recebíveis (Duplicatas)",
+          description: "É um serviço que permite à empresa receber agora o valor de vendas feitas a prazo. A Funcional antecipa esse dinheiro, sem precisar de empréstimo bancário, ajudando no fluxo de caixa e evitando atrasos nos pagamentos, com menos burocracia e custo menor.",
+          code: "SFN001",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20FIN/Antecipa%C3%A7%C3%A3o-de-Receb%C3%ADveis-(Duplicatas).aspx",
+          priority: "Média",
+          area: "Soluções Financeiras"
+        },
+        {
+          name: "Nota Comercial Estruturada (Captação Direta)",
+          description: "A Nota Comercial Estruturada é um instrumento financeiro que representa uma promessa de pagamento em dinheiro, em uma data futura, normalmente acompanhado de uma remuneração pré-estabelecida, como juros ou indexadores. Permite às empresas captar recursos diretamente no mercado, sem depender exclusivamente de empréstimos bancários, proporcionando maior flexibilidade e acesso a capital.",
+          code: "SFN002",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20FIN/Nota-Comercial-Estruturada-(Capta%C3%A7%C3%A3o-Direta).aspx",  
+          priority: "Média",
+          area: "Soluções Financeiras"
+        },
+        {
+          name: "Estruturação de CCB",
+          description: "É um serviço que organiza empréstimos formais para empresas por meio da CCB, um documento reconhecido legalmente. A Funcional estrutura todo o processo junto ao banco, garantindo clareza nos valores, prazos e juros, com segurança jurídica para quem empresta e facilidade no acesso ao crédito para quem toma o recurso.",
+          code: "SFN003",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20FIN/Estrutura%C3%A7%C3%A3o-de-CCB.aspx",
+          priority: "Média",
+          area: "Soluções Financeiras"
+        },
+        {
+          name: "Operações com CPR",
+          description: "É um serviço que ajuda o produtor rural a conseguir crédito usando sua produção futura como garantia. A Funcional estrutura a operação com segurança, permitindo que o produtor receba o dinheiro antes da colheita, sem precisar vender os produtos de imediato. Isso garante recursos para investir na lavoura e dá ao credor mais segurança no recebimento.",
+          code: "SFN004",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20FIN/Opera%C3%A7%C3%B5es-com-CPR.aspx",
+          priority: "Média",
+          area: "Soluções Financeiras"
+        },
+
+        {
+          name: "Debêntures Privadas para Financiamento Estruturado",
+          description: "É um serviço que ajuda empresas a captar dinheiro direto com investidores, sem passar por banco. A Funcional estrutura a emissão de debêntures — títulos de dívida privada — que permitem financiar projetos ou expandir o negócio com mais liberdade, menos custo e retorno atrativo para quem investe.",
+          code: "SFN005",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20FIN/Deb%C3%AAntures-Privadas-para-Financiamento-Estruturado.aspx",
+          priority: "Alta",
+          area: "Soluções Financeiras"
+        },
+
+        {
+          name: "Estruturação de Dívidas",
+          description: "É um serviço que organiza ou renegocia as dívidas da empresa de forma estratégica. A Funcional monta o melhor plano para pagar com prazos, taxas e valores que caibam no fluxo de caixa. Quando necessário, renegocia com os credores para reduzir juros, alongar prazos e evitar inadimplência, ajudando a recuperar o equilíbrio financeiro e garantir a continuidade do negócio",
+          code: "SFN006",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20FIN/Estrutura%C3%A7%C3%A3o-de-D%C3%ADvidas.aspx",
+          priority: "Alta",
+          area: "Soluções Financeiras"
+        },
+        
+        {
+          name: "FIDIC (Estruturação de Operação Financeira)",
+          description: "É um serviço que estrutura operações financeiras por meio de Fundos de Investimento em Direitos Creditórios (FIDIC). A Funcional monta a estratégia de captação, seleciona os ativos que vão compor o fundo e acompanha toda a operação, oferecendo uma alternativa segura e personalizada para empresas que buscam crédito com planejamento e controle.",
+          code: "SFN007",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20FIN/FIDIC-(Estrutura%C3%A7%C3%A3o-de-Opera%C3%A7%C3%A3o-Financeira).aspx",
+          priority: "Média",
+          area: "Soluções Financeiras"
+        },
+         {
+          name: " B.I. – Implantação Sistema Atua",
+          description: "É um serviço de BI especializado para empresas de transporte e logística que utilizam o TMS Atua. Através de dashboards interativos e automatizados, consolidamos dados operacionais, financeiros e estratégicos, proporcionando visão unificada e gestão eficiente.",
+          code: "ABI001",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INT/B.I.---Implanta%C3%A7%C3%A3o-Sistema-Atua.aspx",
+          priority: "Média",
+          area: "Inteligência de Dados"
+        },
+        {
+          name: "B.I. – Horas de Desenvolvimento",
+          description: "É um serviço de BI sob demanda, onde empresas adquirem pacotes de horas para personalização e otimização de dashboards no Power BI. Permite solicitar novas análises, ajustes, integrações e melhorias contínuas, garantindo que o BI evolua conforme as necessidades do negócio",
+          code: "ABI002",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INT/B.I.-%E2%80%93-Horas-de-Desenvolvimento.aspx",
+          priority: "Alta",
+          area: "Inteligência de Dados"
+        },
+        {
+          name: "B.I. - Horas de Treinamento",
+          description: "É um serviço de capacitação prática que ensina equipes a criar e gerenciar seus próprios dashboards no Power BI, promovendo autonomia na análise de dados e permitindo uma cultura mais analítica, com decisões baseadas em informações claras e acessíveis",
+          code: "ABI003",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INT/B.I.---Horas-de-Treinamento.aspx",
+          priority: "Média",
+          area: "Inteligência de Dados"
+        },
+        {
+          name: "B.I. - Implantação Demais Sistemas",
+          description: "É um serviço de BI que integra dados de sistemas diversos usados pela empresa em dashboards inteligentes no Power BI, automatizando relatórios e organizando informações operacionais, financeiras e estratégicas para uma gestão mais eficiente e visual.",
+          code: "ABI004",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INT/B.I.---Implanta%C3%A7%C3%A3o-Demais-Sistemas.aspx",
+          priority: "Média",
+          area: "Inteligência de Dados"
+        },
+
+        {
+          name: "B.I. - Sustentação Mensal",
+          description: "É um serviço de suporte contínuo para manter dashboards em Power BI sempre atualizados e aderentes à realidade do negócio, com ajustes, melhorias e inclusão de novos dados, garantindo que a gestão continue sendo guiada por informações confiáveis.",
+          code: "ABI005",
+          url:"https://funcionalx.sharepoint.com/sites/produtos/SitePages/Produtos%20INT/B.I.---Sustenta%C3%A7%C3%A3o-Mensal.aspx",
+          priority: "Média",
+          area: "Inteligência de Dados"
+        }
+
+
+      ];
+
+
+$scope.selectedAreas = {}; // Inicia sem nenhuma área selecionada
+
+$scope.filterByArea = function () {
+    if (Object.values($scope.selectedAreas).every(val => !val)) {
+        // Se nenhuma área estiver selecionada, exibe todos
+        $scope.filteredNotebooks = $scope.notebooks;
+    } else {
+        $scope.filteredNotebooks = $scope.notebooks.filter((item) =>
+            $scope.selectedAreas[item.area]
+        );
+    }
+};
+
+// Função para selecionar ou desmarcar todas as áreas
+$scope.toggleAllAreas = function () {
+    if (Object.values($scope.selectedAreas).some(val => !val)) {
+        // Se houver alguma não selecionada, marca todas
+        $scope.selectedAreas = {
+            'Jurídico': true,
+            'Contabilidade': true,
+            'Investimentos': true,
+            'Soluções Financeiras': true,
+            'Auditoria': true,
+            'Consultoria': true,
+            'Inteligência de Dados': true,
+            'Gestão Tributária': true
+        };
+    } else {
+        // Desmarca todas
+        $scope.selectedAreas = {};
+    }
+    $scope.filterByArea();
+};
+
+// Chamar a função na inicialização para garantir que tudo seja carregado corretamente
+$scope.filterByArea();
+
+
+// Chamar a função na inicialização
+$scope.filterByArea();
+
+  
+
+      // Função de Ordenação Personalizada
+// Inicializa a variável de ordenação
+$scope.orderList = "name"; // Ordenar por Nome (A–Z) como padrão
+
+// Função de Ordenação Personalizada
+$scope.customOrder = function (item) {
+  const priorityOrder = {
+    "Alta": 1,
+    "Média": 2,
+    "Baixa": 3
+  };
+
+  if ($scope.orderList === "highToLow") {
+    return -priorityOrder[item.priority] || 99; // Alta → Baixa
+  }
+  if ($scope.orderList === "lowToHigh") {
+    return priorityOrder[item.priority] || 99; // Baixa → Alta
+  }
+
+  return item.name; // Padrão: Nome (A-Z)
+};
+
+// Aplicar a ordenação ao carregar
+$scope.filteredNotebooks = $scope.notebooks.sort((a, b) => {
+  if (a.name < b.name) return -1;
+  if (a.name > b.name) return 1;
+  return 0;
+});
+
+// Chamar a função de filtro para garantir que a lista inicial esteja correta
+$scope.filterByArea();
+
+  
+
+
+
+
+    // Função de Exportação para Excel
+// Função de Exportação para Excel (Apenas Produtos Filtrados)
+// Função de Exportação para Excel (Apenas Produtos Filtrados)
+$scope.exportToExcel = function() {
+  // Verificar se há produtos filtrados
+  if ($scope.filteredNotebooks.length === 0) {
+    alert("Nenhum produto selecionado para exportar.");
+    return;
+  }
+
+  // Criar uma nova planilha com os produtos filtrados
+  const wb = XLSX.utils.book_new();
+  const ws_data = $scope.filteredNotebooks.map(item => ({
+    name: item.name,
+    description: item.description,
+    code: item.code,
+    url: item.url,
+    priority: item.priority,
+    area: item.area  // Inclui a coluna de área
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(ws_data);
+  
+  // Adicionando hiperlinks manualmente
+  Object.keys(ws).forEach(cell => {
+    if (cell.startsWith("D") && ws[cell].v) {
+      ws[cell].l = { Target: ws[cell].v }; // Adiciona o hiperlink diretamente
+    }
+  });
+
+  XLSX.utils.book_append_sheet(wb, ws, "Produtos");
+  XLSX.writeFile(wb, "Produtos_Funcional_Filtrados.xlsx");
+};
+
+
+
+});
+  </script>
+</body>
+</html>
